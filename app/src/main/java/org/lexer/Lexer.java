@@ -146,8 +146,7 @@ public class Lexer {
 
 	public void tokenize() {
 		Token tok = null;
-		for (tok = this.nextToken(); !tok.getType().getType()
-				.equals(TokenList.EOF); tok = this.nextToken()) {
+		for (tok = this.nextToken(); !tok.getType().equals(TokenList.EOF); tok = this.nextToken()) {
 			this.tokens.addElement(tok);
 		}
 		this.tokens.addElement(tok);
@@ -166,7 +165,7 @@ public class Lexer {
 		System.out.println("Created the lexer : " + lx);
 		for (Token tok : tokens) {
 			System.out.println(
-					"Token Type : " + tok.getType().getType() + "\nToken Value : "
+					"Token Type : " + tok.getType() + "\nToken Value : "
 							+ tok.getTokenValue() + "\n");
 		}
 

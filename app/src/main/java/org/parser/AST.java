@@ -7,6 +7,10 @@ import java.util.Vector;
 interface Node {
 	String getTokenValue();
 
+	void print(String msg);
+
+	String getNodeValue();
+
 }
 
 interface Statement extends Node {
@@ -16,6 +20,82 @@ interface Statement extends Node {
 interface Expression extends Node {
 
 	void expresionNode();
+}
+
+class PrefixExpression implements Expression {
+	private Token token;
+	private String operator;
+	private Expression right;
+
+	public PrefixExpression(Token tok, String op) {
+		this.token = tok;
+		this.operator = op;
+	}
+
+	@Override
+	public void expresionNode() {
+	}
+
+	@Override
+	public String getTokenValue() {
+		return this.token.getTokenValue();
+	}
+
+	@Override
+	public String getNodeValue() {
+		return "(" + this.operator + this.right.getNodeValue() + ")";
+
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + this.getNodeValue());
+	}
+
+	public void setRight(Expression right) {
+		this.right = right;
+	}
+}
+
+class InfixExpression implements Expression {
+	Token token;
+	Expression left;
+	String operator;
+	Expression right;
+
+	public InfixExpression(Token tok, String op, Expression left) {
+		this.token = tok;
+		this.operator = op;
+		this.left = left;
+	}
+
+	@Override
+	public void expresionNode() {
+
+	}
+
+	@Override
+	public String getTokenValue() {
+		return this.token.getTokenValue();
+	}
+
+	@Override
+	public String getNodeValue() {
+		return "(" + this.left.getNodeValue() + " " + this.operator + " " + this.right.getNodeValue() + ")";
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + this.getNodeValue());
+	}
+
+	public void setRight(Expression exp) {
+		this.right = exp;
+	}
+
+	public Expression getLeft() {
+		return this.left;
+	}
 }
 
 class Identifier implements Expression {
@@ -34,8 +114,91 @@ class Identifier implements Expression {
 
 	@Override
 	public void expresionNode() {
+
+	}
+
+	@Override
+	public String getNodeValue() {
+		return this.value;
+
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + this.getNodeValue());
+	}
+
+}
+
+class IntegerLiteral implements Expression {
+	Token token;
+	int value;
+
+	IntegerLiteral(Token tok) {
+		this.token = tok;
+
+	}
+
+	IntegerLiteral(Token tok, int val) {
+		this.token = tok;
+		this.value = val;
+	}
+
+	@Override
+	public void expresionNode() {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public String getTokenValue() {
+		return this.token.getTokenValue();
+	}
+
+	@Override
+	public String getNodeValue() {
+		return this.token.getTokenValue();
+	}
+
+	public void setValue(int val) {
+		this.value = val;
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + this.getNodeValue());
+	}
+
+}
+
+class ExpressionStatement implements Statement {
+	Token token;
+	Expression expression;
+
+	ExpressionStatement(Token tok, Expression expression) {
+		this.token = tok;
+		this.expression = expression;
+	}
+
+	@Override
+	public void statementNode() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public String getNodeValue() {
+		return (this.expression != null) ? this.expression.getNodeValue() : "";
+	}
+
+	@Override
+	public String getTokenValue() {
+		return this.token.getTokenValue();
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + this.getNodeValue());
 	}
 
 }
@@ -59,6 +222,19 @@ class LetStatement implements Statement {
 	@Override
 	public String getTokenValue() {
 		return this.token.getTokenValue();
+	}
+
+	@Override
+	public String getNodeValue() {
+		String res = this.getTokenValue() + this.name.getNodeValue() + " = " + ((this.value != null)
+				? this.value.getNodeValue()
+				: "") + ";";
+		return res;
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + this.getNodeValue());
 	}
 
 	public Identifier getName() {
@@ -91,13 +267,25 @@ class ReturnStatement implements Statement {
 
 	@Override
 	public void statementNode() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public String getTokenValue() {
 		return this.token.getTokenValue();
+	}
+
+	@Override
+	public String getNodeValue() {
+		String res = this.token.getTokenValue() + " " + ((this.returnValue != null)
+				? this.returnValue.getNodeValue()
+				: "") + ";";
+		return res;
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + this.getNodeValue());
 	}
 
 	public Expression getReturnValue() {
@@ -115,7 +303,7 @@ class Program implements Node {
 	// TODO: Refactor the statements to have some kind of getter and setter
 	Vector<Statement> statements;
 
-	Program() {
+	public Program() {
 		this.statements = new Vector<Statement>();
 	}
 
@@ -127,6 +315,19 @@ class Program implements Node {
 		return this.statements.get(0).getTokenValue();
 	}
 
+	@Override
+	public String getNodeValue() {
+		String res = "";
+		for (Statement stm : this.statements) {
+			res += stm.getNodeValue();
+		}
+		return res;
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + this.getNodeValue());
+	}
 }
 
 public class AST {

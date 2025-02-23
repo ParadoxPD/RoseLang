@@ -1,25 +1,20 @@
 package org.lexer;
 
 public class Token {
-	private TokenType type;
+	private String type;
 	private String tokenValue;
 
 	Token(String type, String tokenValue) {
-		this.type = new TokenType(type);
-		this.tokenValue = tokenValue;
-	}
-
-	Token(TokenType type, String tokenValue) {
-		this.type = type;
+		this.type = (type);
 		this.tokenValue = tokenValue;
 	}
 
 	Token(String type, byte ch) {
-		this.type = new TokenType(type);
+		this.type = (type);
 		this.tokenValue = (char) ch + "";
 	}
 
-	public TokenType getType() {
+	public String getType() {
 		return this.type;
 	}
 
@@ -35,16 +30,16 @@ public class Token {
 		return '0' <= ch && ch <= '9';
 	}
 
-	static TokenType lookUpIdentifier(String tok) {
+	static String lookUpIdentifier(String tok) {
 
 		if (TokenList.KEYWORDS.containsKey(tok)) {
-			return new TokenType(TokenList.KEYWORDS.get(tok));
+			return (TokenList.KEYWORDS.get(tok));
 		}
-		return new TokenType(TokenList.IDENTIFIER);
+		return (TokenList.IDENTIFIER);
 
 	}
 
 	public void printToken() {
-		System.out.println("{Type: " + this.type.getType() + " Value: " + this.tokenValue + "}");
+		System.out.println("{Type: " + this.getType() + " Value: " + this.tokenValue + "}");
 	}
 }

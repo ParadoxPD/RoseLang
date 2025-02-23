@@ -14,7 +14,7 @@ class REPL {
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
 		String prompt = ">> ";
-		System.out.println("Welcome to the Crazy Programming Language...\nEnter the commands below");
+		System.out.println("Welcome to JorkLang where you can jork the lang...\nEnter the commands below");
 		while (true) {
 			System.out.print(prompt);
 			String input = sc.nextLine();
