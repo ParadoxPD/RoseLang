@@ -17,7 +17,7 @@ class Identifier implements Expression {
 	}
 
 	@Override
-	public void expresionNode() {
+	public void expressionNode() {
 
 	}
 

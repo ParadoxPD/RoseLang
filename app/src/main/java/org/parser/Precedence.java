@@ -22,6 +22,7 @@ interface PrecedenceList {
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.PLUS), SUM),
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.MINUS), SUM),
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.SLASH), PRODUCT),
+			new AbstractMap.SimpleEntry<String, Integer>((TokenList.PAREN_OPEN), CALL),
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.ASTERISK), PRODUCT));
 
 }

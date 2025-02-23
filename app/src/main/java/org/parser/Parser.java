@@ -41,6 +41,7 @@ public class Parser {
 	private Vector<ParserError> errors;
 	private Token curr = null;
 	private Token peek = null;
+	private boolean peekAvailable;
 	private int currPos;
 	private Map<String, PrefixParser> prefixParsers;
 	private Map<String, InfixParser> infixParsers;
@@ -49,6 +50,7 @@ public class Parser {
 		this.tokens = tokens;
 		this.currPos = 0;
 		this.errors = new Vector<ParserError>();
+		this.peekAvailable = true;
 
 		this.nextToken();
 		this.nextToken();
@@ -110,6 +112,61 @@ public class Parser {
 			}
 		};
 
+		PrefixParser ifExpressionParser = new PrefixParser() {
+			@Override
+			Expression parse() {
+				IfExpression stm = new IfExpression(curr);
+				if (!expectPeek(TokenList.PAREN_OPEN)) {
+					return null;
+				}
+
+				nextToken();
+				stm.setCondition(parseExpression(PrecedenceList.LOWEST));
+
+				if (!expectPeek(TokenList.PAREN_CLOSE)) {
+					return null;
+				}
+				if (!expectPeek(TokenList.BRACE_OPEN)) {
+					return null;
+				}
+				stm.setConsequence(parseBlockStatement());
+
+				if (peekTokenIs(TokenList.ELSE)) {
+					nextToken();
+					if (!expectPeek(TokenList.BRACE_OPEN)) {
+						return null;
+					}
+					stm.setAlternative(parseBlockStatement());
+				}
+
+				return stm;
+			}
+		};
+		PrefixParser functionParser = new PrefixParser() {
+			@Override
+			Expression parse() {
+				FunctionLiteral fnt = new FunctionLiteral(curr);
+
+				if (!expectPeek(TokenList.IDENTIFIER)) {
+					return null;
+				}
+				fnt.setName(new Identifier(curr, curr.getTokenValue()));
+
+				if (!expectPeek(TokenList.PAREN_OPEN)) {
+					return null;
+				}
+				fnt.addParameters(parseFunctionParameters());
+
+				if (!expectPeek(TokenList.BRACE_OPEN)) {
+					return null;
+				}
+				fnt.addBody(parseBlockStatement());
+				fnt.print("Function : ");
+				return fnt;
+
+			}
+		};
+
 		this.registerPrefixParser((TokenList.IDENTIFIER), idenParser);
 		this.registerPrefixParser((TokenList.INT), integerParser);
 		this.registerPrefixParser((TokenList.BANG), prefixExpressionParser);
@@ -117,6 +174,8 @@ public class Parser {
 		this.registerPrefixParser((TokenList.TRUE), booleanParser);
 		this.registerPrefixParser((TokenList.FALSE), booleanParser);
 		this.registerPrefixParser((TokenList.PAREN_OPEN), groupedExpressionParser);
+		this.registerPrefixParser((TokenList.IF), ifExpressionParser);
+		this.registerPrefixParser((TokenList.FUNCTION), functionParser);
 
 		InfixParser infixParser = new InfixParser() {
 			@Override
@@ -132,6 +191,16 @@ public class Parser {
 
 		};
 
+		InfixParser callExpressionParser = new InfixParser() {
+			@Override
+			Expression parse(Expression function) {
+				CallExpression exp = new CallExpression(curr, function);
+				exp.addArguments(parseCallArguments());
+				exp.print("Call Exp: ");
+				return exp;
+			}
+		};
+
 		this.registerInfixParser((TokenList.PLUS), infixParser);
 		this.registerInfixParser((TokenList.MINUS), infixParser);
 		this.registerInfixParser((TokenList.SLASH), infixParser);
@@ -140,6 +209,7 @@ public class Parser {
 		this.registerInfixParser((TokenList.NOT_EQ), infixParser);
 		this.registerInfixParser((TokenList.LT), infixParser);
 		this.registerInfixParser((TokenList.GT), infixParser);
+		this.registerInfixParser((TokenList.PAREN_OPEN), callExpressionParser);
 
 	}
 
@@ -152,9 +222,13 @@ public class Parser {
 	}
 
 	int peekPrecedence() {
-		if (PrecedenceList.Precedences.containsKey(this.peek.getType())) {
+		if (this.peekAvailable) {
+			if (PrecedenceList.Precedences.containsKey(this.peek.getType())) {
 
-			return PrecedenceList.Precedences.get(this.peek.getType());
+				return PrecedenceList.Precedences.get(this.peek.getType());
+			} else {
+				return PrecedenceList.LOWEST;
+			}
 		} else {
 			return PrecedenceList.LOWEST;
 		}
@@ -176,7 +250,8 @@ public class Parser {
 		} else {
 			this.curr = this.peek;
 			this.peek = null;
-			errors.addElement(new ParserError(null, "Out of Tokens. Weird???"));
+			this.peekAvailable = false;
+			System.out.println("Out of Tokens. If its not EOF then you might have fked up.");
 			// System.exit(1);
 		}
 	}
@@ -186,6 +261,9 @@ public class Parser {
 	}
 
 	boolean peekTokenIs(String type) {
+		if (!this.peekAvailable) {
+			return false;
+		}
 		return this.peek.getType() == type;
 	}
 
@@ -195,7 +273,7 @@ public class Parser {
 			return true;
 		} else {
 			this.errors.addElement(new ParserError(ErrorList.INVALID_SYNTAX,
-					"Expected " + this.peek.getType() + "Got : " + type));
+					"Expected " + this.peek.getType() + " Got : " + type));
 			return false;
 		}
 	}
@@ -218,7 +296,7 @@ public class Parser {
 		if (this.peekTokenIs(TokenList.SEMICOLON)) {
 			this.nextToken();
 		}
-		smt.print("Exp : ");
+		smt.print("Exp Stm: ");
 
 		return smt;
 
@@ -235,7 +313,8 @@ public class Parser {
 
 		PrefixParser prefix = this.prefixParsers.get(this.curr.getType());
 		Expression leftExp = prefix.parse();
-		leftExp.print("Left Exp: ");
+		if (leftExp != null)
+			leftExp.print("Left Exp: ");
 
 		while (!this.peekTokenIs(TokenList.SEMICOLON) && precedence < this.peekPrecedence()) {
 
@@ -268,9 +347,9 @@ public class Parser {
 
 		stm.setValue(this.parseExpression(PrecedenceList.LOWEST));
 
-		// while (!this.currTokenIs(TokenList.SEMICOLON)) {
-		// this.nextToken();
-		// }
+		if (this.peekTokenIs(TokenList.SEMICOLON)) {
+			this.nextToken();
+		}
 
 		stm.print("Let Statement : ");
 		return stm;
@@ -281,11 +360,74 @@ public class Parser {
 
 		this.nextToken();
 
-		while (!this.currTokenIs(TokenList.SEMICOLON)) {
+		stm.setReturnValue(this.parseExpression(PrecedenceList.LOWEST));
+
+		if (this.peekTokenIs(TokenList.SEMICOLON)) {
 			this.nextToken();
 		}
 
+		stm.print("Return Statement : ");
 		return stm;
+	}
+
+	BlockStatement parseBlockStatement() {
+		BlockStatement block = new BlockStatement(this.curr);
+		this.nextToken();
+
+		while (!(this.currTokenIs(TokenList.BRACE_CLOSE) || this.currTokenIs(TokenList.EOF))) {
+			Statement stm = this.parseStatement();
+			if (stm != null) {
+				block.addStatement(stm);
+			}
+			this.nextToken();
+		}
+		return block;
+	}
+
+	Vector<Identifier> parseFunctionParameters() {
+		Vector<Identifier> parameters = new Vector<Identifier>();
+		if (this.peekTokenIs(TokenList.PAREN_CLOSE)) {
+			this.nextToken();
+			return parameters;
+		}
+		this.nextToken();
+
+		Identifier ident = new Identifier(this.curr, this.curr.getTokenValue());
+		parameters.addElement(ident);
+
+		while (this.peekTokenIs(TokenList.COMMA)) {
+			this.nextToken();
+			this.nextToken();
+			ident = new Identifier(this.curr, this.curr.getTokenValue());
+			parameters.addElement(ident);
+		}
+
+		if (!this.expectPeek(TokenList.PAREN_CLOSE)) {
+			return null;
+		}
+		return parameters;
+
+	}
+
+	Vector<Expression> parseCallArguments() {
+		Vector<Expression> args = new Vector<Expression>();
+
+		if (this.peekTokenIs(TokenList.PAREN_CLOSE)) {
+			this.nextToken();
+			return args;
+		}
+		this.nextToken();
+		args.addElement(this.parseExpression(PrecedenceList.LOWEST));
+
+		while (this.peekTokenIs(TokenList.COMMA)) {
+			this.nextToken();
+			this.nextToken();
+			args.addElement(this.parseExpression(PrecedenceList.LOWEST));
+		}
+		if (!this.expectPeek(TokenList.PAREN_CLOSE)) {
+			return null;
+		}
+		return args;
 	}
 
 	public Program parseProgram() {

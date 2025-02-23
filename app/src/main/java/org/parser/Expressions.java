@@ -2,9 +2,11 @@ package org.parser;
 
 import org.lexer.Token;
 
+import java.util.Vector;
+
 interface Expression extends Node {
 
-	void expresionNode();
+	void expressionNode();
 }
 
 class PrefixExpression implements Expression {
@@ -18,7 +20,7 @@ class PrefixExpression implements Expression {
 	}
 
 	@Override
-	public void expresionNode() {
+	public void expressionNode() {
 	}
 
 	@Override
@@ -55,7 +57,7 @@ class InfixExpression implements Expression {
 	}
 
 	@Override
-	public void expresionNode() {
+	public void expressionNode() {
 
 	}
 
@@ -80,5 +82,93 @@ class InfixExpression implements Expression {
 
 	public Expression getLeft() {
 		return this.left;
+	}
+}
+
+class IfExpression implements Expression {
+	Token token;
+	Expression condition;
+	BlockStatement consequence;
+	BlockStatement alternative;
+
+	public IfExpression(Token tok) {
+		this.token = tok;
+	}
+
+	@Override
+	public void expressionNode() {
+
+	}
+
+	@Override
+	public String getTokenValue() {
+		return this.token.getTokenValue();
+	}
+
+	@Override
+	public String getNodeValue() {
+		// return "";
+		return "if " + this.condition.getNodeValue() + this.consequence.getNodeValue()
+				+ ((this.alternative != null) ? ("else" + this.alternative.getNodeValue())
+						: "");
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + " " + this.getNodeValue());
+	}
+
+	public void setCondition(Expression condition) {
+		this.condition = condition;
+	}
+
+	public void setConsequence(BlockStatement consequence) {
+		this.consequence = consequence;
+	}
+
+	public void setAlternative(BlockStatement alternative) {
+		this.alternative = alternative;
+	}
+}
+
+class CallExpression implements Expression {
+	Token token;
+	Expression function;
+	Vector<Expression> arguments;
+
+	public CallExpression(Token tok, Expression function) {
+		this.token = tok;
+		this.function = function;
+		this.arguments = new Vector<Expression>();
+	}
+
+	@Override
+	public void expressionNode() {
+
+	}
+
+	@Override
+	public String getTokenValue() {
+		return this.token.getTokenValue();
+	}
+
+	@Override
+	public String getNodeValue() {
+		String res = this.function.getNodeValue() + "( ";
+
+		for (Expression arg : arguments) {
+			res += arg.getNodeValue() + ", ";
+		}
+		res += " )";
+		return res;
+	}
+
+	@Override
+	public void print(String msg) {
+		System.out.println(msg + this.getNodeValue());
+	}
+
+	public void addArguments(Vector<Expression> args) {
+		this.arguments = args;
 	}
 }
