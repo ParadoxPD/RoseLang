@@ -89,10 +89,34 @@ public class Parser {
 			}
 		};
 
+		PrefixParser booleanParser = new PrefixParser() {
+			@Override
+			Expression parse() {
+				return new BooleanLiteral(curr, currTokenIs(TokenList.TRUE));
+			}
+		};
+
+		PrefixParser groupedExpressionParser = new PrefixParser() {
+			@Override
+			Expression parse() {
+				nextToken();
+				Expression exp = parseExpression(PrecedenceList.LOWEST);
+
+				if (!expectPeek(TokenList.PAREN_CLOSE)) {
+					return null;
+
+				}
+				return exp;
+			}
+		};
+
 		this.registerPrefixParser((TokenList.IDENTIFIER), idenParser);
 		this.registerPrefixParser((TokenList.INT), integerParser);
 		this.registerPrefixParser((TokenList.BANG), prefixExpressionParser);
 		this.registerPrefixParser((TokenList.MINUS), prefixExpressionParser);
+		this.registerPrefixParser((TokenList.TRUE), booleanParser);
+		this.registerPrefixParser((TokenList.FALSE), booleanParser);
+		this.registerPrefixParser((TokenList.PAREN_OPEN), groupedExpressionParser);
 
 		InfixParser infixParser = new InfixParser() {
 			@Override
@@ -211,7 +235,7 @@ public class Parser {
 
 		PrefixParser prefix = this.prefixParsers.get(this.curr.getType());
 		Expression leftExp = prefix.parse();
-		// leftExp.print("Left Exp: ");
+		leftExp.print("Left Exp: ");
 
 		while (!this.peekTokenIs(TokenList.SEMICOLON) && precedence < this.peekPrecedence()) {
 
@@ -240,9 +264,15 @@ public class Parser {
 			return null;
 		}
 
-		while (!this.currTokenIs(TokenList.SEMICOLON)) {
-			this.nextToken();
-		}
+		this.nextToken();
+
+		stm.setValue(this.parseExpression(PrecedenceList.LOWEST));
+
+		// while (!this.currTokenIs(TokenList.SEMICOLON)) {
+		// this.nextToken();
+		// }
+
+		stm.print("Let Statement : ");
 		return stm;
 	}
 
