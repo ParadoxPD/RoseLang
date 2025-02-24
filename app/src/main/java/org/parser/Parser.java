@@ -45,12 +45,16 @@ public class Parser {
 	private int currPos;
 	private Map<String, PrefixParser> prefixParsers;
 	private Map<String, InfixParser> infixParsers;
+	private Program program;
+	private boolean debug = false;
 
-	public Parser(Vector<Token> tokens) {
+	public Parser(Vector<Token> tokens, boolean debug) {
 		this.tokens = tokens;
 		this.currPos = 0;
 		this.errors = new Vector<ParserError>();
 		this.peekAvailable = true;
+		this.program = null;
+		this.debug = debug;
 
 		this.nextToken();
 		this.nextToken();
@@ -161,7 +165,8 @@ public class Parser {
 					return null;
 				}
 				fnt.addBody(parseBlockStatement());
-				fnt.print("Function : ");
+				if (debug)
+					fnt.print("Function : ");
 				return fnt;
 
 			}
@@ -196,7 +201,8 @@ public class Parser {
 			Expression parse(Expression function) {
 				CallExpression exp = new CallExpression(curr, function);
 				exp.addArguments(parseCallArguments());
-				exp.print("Call Exp: ");
+				if (debug)
+					exp.print("Call Exp: ");
 				return exp;
 			}
 		};
@@ -251,7 +257,8 @@ public class Parser {
 			this.curr = this.peek;
 			this.peek = null;
 			this.peekAvailable = false;
-			System.out.println("Out of Tokens. If its not EOF then you might have fked up.");
+			if (debug)
+				System.out.println("Out of Tokens. If its not EOF then you might have fked up.");
 			// System.exit(1);
 		}
 	}
@@ -284,9 +291,33 @@ public class Parser {
 				return this.parseLetStatement();
 			case TokenList.RETURN:
 				return this.parseReturnStatement();
+			case TokenList.WHILE:
+				return this.parseWhileStatement();
 			default:
 				return this.parseExpressionStatement();
 		}
+	}
+
+	Statement parseWhileStatement() {
+		WhileStatement stm = new WhileStatement(this.curr);
+		if (!expectPeek(TokenList.PAREN_OPEN)) {
+			return null;
+		}
+
+		nextToken();
+		stm.setCondition(parseExpression(PrecedenceList.LOWEST));
+
+		if (!expectPeek(TokenList.PAREN_CLOSE)) {
+			return null;
+		}
+		if (!expectPeek(TokenList.BRACE_OPEN)) {
+			return null;
+		}
+		stm.setBody(parseBlockStatement());
+		if (debug)
+			stm.print("While Loop : ");
+		return stm;
+
 	}
 
 	ExpressionStatement parseExpressionStatement() {
@@ -296,7 +327,8 @@ public class Parser {
 		if (this.peekTokenIs(TokenList.SEMICOLON)) {
 			this.nextToken();
 		}
-		smt.print("Exp Stm: ");
+		if (debug)
+			smt.print("Exp Stm: ");
 
 		return smt;
 
@@ -314,7 +346,8 @@ public class Parser {
 		PrefixParser prefix = this.prefixParsers.get(this.curr.getType());
 		Expression leftExp = prefix.parse();
 		if (leftExp != null)
-			leftExp.print("Left Exp: ");
+			if (debug)
+				leftExp.print("Left Exp: ");
 
 		while (!this.peekTokenIs(TokenList.SEMICOLON) && precedence < this.peekPrecedence()) {
 
@@ -351,7 +384,8 @@ public class Parser {
 			this.nextToken();
 		}
 
-		stm.print("Let Statement : ");
+		if (debug)
+			stm.print("Let Statement : ");
 		return stm;
 	}
 
@@ -366,7 +400,8 @@ public class Parser {
 			this.nextToken();
 		}
 
-		stm.print("Return Statement : ");
+		if (debug)
+			stm.print("Return Statement : ");
 		return stm;
 	}
 
@@ -432,11 +467,11 @@ public class Parser {
 
 	public Program parseProgram() {
 
-		Program program = new Program();
+		this.program = new Program();
 		// this.tokens.getLast().printToken();
 
 		while (this.peek != null) {
-			this.curr.printToken();
+			// this.curr.printToken();
 			Statement stm = this.parseStatement();
 			if (stm != null) {
 				program.statements.addElement(stm);
@@ -444,7 +479,15 @@ public class Parser {
 			this.nextToken();
 		}
 
-		return program;
+		return this.program;
+
+	}
+
+	public void printProgram() {
+		if (debug)
+			this.program.print("Parsed Program : ");
+		else
+			System.out.println("DEBUG set to FALSE");
 
 	}
 

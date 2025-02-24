@@ -42,6 +42,7 @@ public interface TokenList {
 	String FUNCTION = "FUNCTION";
 	String IF = "IF";
 	String ELSE = "ELSE";
+	String WHILE = "WHILE";
 	String TRUE = "TRUE";
 	String FALSE = "FALSE";
 
@@ -53,6 +54,7 @@ public interface TokenList {
 			new AbstractMap.SimpleEntry<String, String>("false", "FALSE"),
 			new AbstractMap.SimpleEntry<String, String>("if", "IF"),
 			new AbstractMap.SimpleEntry<String, String>("else", "ELSE"),
+			new AbstractMap.SimpleEntry<String, String>("while", "WHILE"),
 			new AbstractMap.SimpleEntry<String, String>("return", "RETURN"));
 
 }

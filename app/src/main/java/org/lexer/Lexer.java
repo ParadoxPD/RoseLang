@@ -9,13 +9,15 @@ public class Lexer {
 	private int readPos;
 	private byte curr;
 	private Vector<Token> tokens;
+	private boolean debug;
 
-	public Lexer(String input) {
+	public Lexer(String input, boolean debug) {
 		this.input = input;
 		this.position = 0;
 		this.readPos = 0;
 		this.readChar();
 		this.tokens = new Vector<Token>();
+		this.debug = debug;
 	}
 
 	void readChar() {
@@ -156,10 +158,21 @@ public class Lexer {
 		return this.tokens;
 	}
 
+	public void printTokens() {
+		if (debug) {
+			for (Token tok : this.tokens) {
+				tok.printToken();
+			}
+
+		} else {
+			System.out.println("DEBUG set to FALSE");
+		}
+	}
+
 	public static void main(String[] args) {
 		System.out.println("Hello ");
 		String testInput = "let five = 5;\nlet ten = 10;\nfunction add(x, y) {\n!-/*5;\n5 < 10 > 5;\n5 < 10 > 5;\nif (5 < 10) {\nreturn true;\n} else {\nreturn false;\n}\n};\nlet result = add(five, ten);\n10 == 10;\n10 != 9;\n";
-		Lexer lx = new Lexer(testInput);
+		Lexer lx = new Lexer(testInput, true);
 		lx.tokenize();
 		Vector<Token> tokens = lx.getTokens();
 		System.out.println("Created the lexer : " + lx);
