@@ -47,4 +47,16 @@ public class IfExpression implements Expression {
 	public void setAlternative(BlockStatement alternative) {
 		this.alternative = alternative;
 	}
+
+	public Expression getCondition() {
+		return this.condition;
+	}
+
+	public BlockStatement getConsequence() {
+		return this.consequence;
+	}
+
+	public BlockStatement getAlternative() {
+		return this.alternative;
+	}
 }

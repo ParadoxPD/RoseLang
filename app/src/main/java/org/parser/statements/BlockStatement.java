@@ -41,4 +41,8 @@ public class BlockStatement implements Statement {
 	public void addStatement(Statement stm) {
 		this.statements.addElement(stm);
 	}
+
+	public Vector<Statement> getStatements() {
+		return this.statements;
+	}
 }

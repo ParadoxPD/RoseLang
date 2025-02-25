@@ -41,4 +41,12 @@ public class InfixExpression implements Expression {
 	public Expression getLeft() {
 		return this.left;
 	}
+
+	public Expression getRight() {
+		return this.right;
+	}
+
+	public String getOperator() {
+		return this.operator;
+	}
 }
