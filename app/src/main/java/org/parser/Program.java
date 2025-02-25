@@ -1,19 +1,9 @@
 package org.parser;
 
-import org.lexer.Token;
-
+import org.parser.statements.*;
 import java.util.Vector;
 
-interface Node {
-	String getTokenValue();
-
-	void print(String msg);
-
-	String getNodeValue();
-
-}
-
-class Program implements Node {
+public class Program implements Node {
 
 	// TODO: Refactor the statements to have some kind of getter and setter
 	Vector<Statement> statements;
@@ -43,8 +33,8 @@ class Program implements Node {
 	public void print(String msg) {
 		System.out.println(msg + this.getNodeValue());
 	}
-}
 
-public class AST {
-
+	public Vector<Statement> getStatements() {
+		return this.statements;
+	}
 }

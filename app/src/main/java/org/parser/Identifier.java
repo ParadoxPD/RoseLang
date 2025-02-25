@@ -1,8 +1,9 @@
 package org.parser;
 
 import org.lexer.Token;
+import org.parser.expressions.*;
 
-class Identifier implements Expression {
+public class Identifier implements Expression {
 	Token token;
 	String value;
 

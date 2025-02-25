@@ -1,9 +1,10 @@
 package org.parser;
 
-import org.lexer.Token;
-import org.lexer.TokenList;
-import org.error.ErrorList;
-import org.error.ParserError;
+import org.lexer.*;
+import org.error.*;
+import org.parser.statements.*;
+import org.parser.literals.*;
+import org.parser.expressions.*;
 
 import java.util.Vector;
 import java.util.Map;
@@ -15,24 +16,8 @@ abstract class PrefixParser {
 }
 
 abstract class InfixParser {
-
-	// private Expression left;
-
-	InfixParser() {
-		// this.left = null;
-	}
-
-	// InfixParser(Expression left) {
-	// this.left = left;
-	// }
-
-	// abstract Expression parse();
-
 	abstract Expression parse(Expression left);
 
-	// public Expression getLeft() {
-	// return this.left;
-	// }
 }
 
 public class Parser {
@@ -264,14 +249,14 @@ public class Parser {
 	}
 
 	boolean currTokenIs(String type) {
-		return this.curr.getType() == type;
+		return this.curr.getType().equals(type);
 	}
 
 	boolean peekTokenIs(String type) {
 		if (!this.peekAvailable) {
 			return false;
 		}
-		return this.peek.getType() == type;
+		return this.peek.getType().equals(type);
 	}
 
 	boolean expectPeek(String type) {
@@ -286,6 +271,7 @@ public class Parser {
 	}
 
 	Statement parseStatement() {
+		// NOTE: Properly implement the '=' parsing (It has some off by one bug)
 		switch (this.curr.getType()) {
 			case TokenList.LET:
 				return this.parseLetStatement();
@@ -489,6 +475,10 @@ public class Parser {
 		else
 			System.out.println("DEBUG set to FALSE");
 
+	}
+
+	public Program getProgram() {
+		return this.program;
 	}
 
 	public Vector<ParserError> getErrors() {
