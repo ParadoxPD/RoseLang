@@ -3,6 +3,7 @@ package org.repl;
 import org.lexer.*;
 import org.parser.*;
 import org.typesystem.Object_T;
+import org.environment.Environment;
 import org.error.ParserError;
 import org.evaluator.Evaluator;
 
@@ -23,7 +24,10 @@ class REPL {
 			String prompt = ">> ";
 			System.out.println(
 					"Welcome to JorkLang where you can jork the lang...\nEnter the commands below");
-			while (true) {
+
+			Environment env = new Environment();
+			Evaluator evaluator = new Evaluator(env);
+			while (true && env != null) {
 				System.out.print(prompt);
 				String input = sc.nextLine();
 				if (input == null || input.equals("")) {
@@ -45,8 +49,8 @@ class REPL {
 				Program program = ps.getProgram();
 				Vector<ParserError> errors = ps.getErrors();
 				if (errors.size() == 0) {
-					Evaluator evaluator = new Evaluator();
 					Object_T object = evaluator.eval(program);
+					// System.out.println(object);
 
 					if (object != null) {
 						System.out.println(object.inspect());

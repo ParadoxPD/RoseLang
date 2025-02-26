@@ -33,4 +33,8 @@ public class Identifier implements Expression {
 		System.out.println(msg + this.getNodeValue());
 	}
 
+	public String getValue() {
+		return this.value;
+	}
+
 }
