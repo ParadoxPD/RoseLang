@@ -59,4 +59,16 @@ public class FunctionLiteral implements Expression {
 		this.body = body;
 	}
 
+	public Identifier getName() {
+		return this.name;
+	}
+
+	public BlockStatement getBody() {
+		return this.body;
+	}
+
+	public Vector<Identifier> getParameters() {
+		return this.parameters;
+	}
+
 }

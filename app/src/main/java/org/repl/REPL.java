@@ -25,9 +25,9 @@ class REPL {
 			System.out.println(
 					"Welcome to JorkLang where you can jork the lang...\nEnter the commands below");
 
-			Environment env = new Environment();
-			Evaluator evaluator = new Evaluator(env);
-			while (true && env != null) {
+			Environment globalEnv = new Environment();
+			Evaluator evaluator = new Evaluator();
+			while (true && globalEnv != null) {
 				System.out.print(prompt);
 				String input = sc.nextLine();
 				if (input == null || input.equals("")) {
@@ -49,7 +49,7 @@ class REPL {
 				Program program = ps.getProgram();
 				Vector<ParserError> errors = ps.getErrors();
 				if (errors.size() == 0) {
-					Object_T object = evaluator.eval(program);
+					Object_T object = evaluator.eval(program, globalEnv);
 					// System.out.println(object);
 
 					if (object != null) {

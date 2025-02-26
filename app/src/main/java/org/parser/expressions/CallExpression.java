@@ -43,4 +43,12 @@ public class CallExpression implements Expression {
 	public void addArguments(Vector<Expression> args) {
 		this.arguments = args;
 	}
+
+	public Expression getFunction() {
+		return this.function;
+	}
+
+	public Vector<Expression> getArguments() {
+		return this.arguments;
+	}
 }
