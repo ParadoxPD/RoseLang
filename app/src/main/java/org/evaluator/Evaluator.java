@@ -35,12 +35,11 @@ public class Evaluator {
 					return val;
 				return new Return_T(val);
 			case LetStatement ls:
-				val = this.eval(ls.getValue(), env);
-				if (this.isError(val)) {
-					return val;
-				}
-				env.setObject(ls.getName().getValue(), val);
-				return val;
+				return this.evalLetStatement(ls, env);
+			case AssignmentStatement as:
+				return this.evalAssignmentStatement(as, env);
+			case WhileStatement ws:
+				return this.evalWhileStatement(ws, env);
 
 			// NOTE: Expression Evaluation
 			case PrefixExpression pe:
@@ -57,10 +56,7 @@ public class Evaluator {
 					return right;
 				return evalInfixExpression(ie.getOperator(), left, right);
 			case FunctionLiteral fl:
-				Identifier name = fl.getName();
-				Vector<Identifier> params = fl.getParameters();
-				BlockStatement body = fl.getBody();
-				return new Function_T(name, params, env, body);
+				return this.addFunction(fl, env);
 			case CallExpression ce:
 				Object_T func = this.eval(ce.getFunction(), env);
 				if (this.isError(func)) {
@@ -70,7 +66,7 @@ public class Evaluator {
 				if (args.size() == 1 && this.isError(args.get(0))) {
 					return args.get(0);
 				}
-				return null;
+				return this.applyFunction(func, args);
 
 			case IntegerLiteral i:
 				return new Integer_T(i.getValue());
@@ -102,10 +98,66 @@ public class Evaluator {
 		return result;
 	}
 
+	Object_T evalLetStatement(LetStatement ls, Environment env) {
+		if (env.isObjectPresent(ls.getName().getValue())) {
+			return new Error_T(
+					ls.getName().getValue() + " Exists. Cannot redeclare stuff.");
+		}
+
+		Object_T val = this.eval(ls.getValue(), env);
+		if (this.isError(val)) {
+			return val;
+		}
+		env.assignObject(ls.getName().getValue(), val);
+		return val;
+
+	}
+
+	Object_T evalWhileStatement(WhileStatement ws, Environment env) {
+		// int raceLimit = 100;
+		// int loopCount = 0;
+
+		Expression condn = ws.getCondition();
+		Object_T condition = this.eval(condn, env);
+		Object_T res = null;
+		if (this.isError(condition))
+			return condition;
+
+		while (isTruth(condition)) {
+
+			res = this.eval(ws.getBody(), env);
+			if (res instanceof Return_T) {
+				return ((Return_T) res).getValue();
+			} else if (res instanceof Error_T) {
+				return res;
+			}
+			// env.printObjects();
+			condition = this.eval(condn, env);
+
+		}
+		return res != null ? res : new Null_T();
+	}
+
+	Object_T evalAssignmentStatement(AssignmentStatement as, Environment env) {
+
+		if (!env.isObjectPresent(as.getName().getValue())) {
+			return new Error_T(as.getName().getValue() + " Does not exist");
+		}
+
+		Object_T val = this.eval(as.getExpression(), env);
+		if (this.isError(val)) {
+			return val;
+		}
+		env.reAssignObject(as.getName().getValue(), val);
+		return val;
+
+	}
+
 	Object_T evalBlockStatement(BlockStatement bs, Environment env) {
 		Object_T result = null;
+		Environment extendedEnv = new Environment(env);
 		for (Statement stm : bs.getStatements()) {
-			result = this.eval(stm, env);
+			result = this.eval(stm, extendedEnv);
 
 			if (result != null) {
 				if (result instanceof Return_T || result instanceof Error_T) {
@@ -216,13 +268,13 @@ public class Evaluator {
 	}
 
 	Object_T evalIfExpression(IfExpression ie, Environment env) {
-		Object_T condition = eval(ie.getCondition(), env);
+		Object_T condition = this.eval(ie.getCondition(), env);
 		if (this.isError(condition))
 			return condition;
 		if (isTruth(condition)) {
-			return eval(ie.getConsequence(), env);
+			return this.eval(ie.getConsequence(), env);
 		} else if (ie.getAlternative() != null) {
-			return eval(ie.getAlternative(), env);
+			return this.eval(ie.getAlternative(), env);
 		} else {
 			return Constants.NULL;
 		}
@@ -235,6 +287,51 @@ public class Evaluator {
 		} else {
 			return new Error_T("Identifier not found : " + id.getValue());
 		}
+	}
+
+	Object_T addFunction(FunctionLiteral fl, Environment env) {
+		Identifier name = fl.getName();
+
+		if (!env.isObjectPresent(name.getNodeValue())) {
+			Vector<Identifier> params = fl.getParameters();
+			BlockStatement body = fl.getBody();
+			Function_T function = new Function_T(name, params, env, body);
+
+			env.assignObject(name.getNodeValue(), function);
+			return function;
+		} else {
+			return new Error_T("Function already exists....");
+		}
+
+	}
+
+	Object_T applyFunction(Object_T func, Vector<Object_T> args) {
+		if (func instanceof Function_T) {
+			Function_T function = (Function_T) func;
+
+			Environment extendedEnv = this.extendEnv(function, args);
+			Object_T evaluated = this.eval(function.getBody(), extendedEnv);
+			return this.unWrapReturn(evaluated);
+		} else {
+			return new Error_T("Not a function : " + func.type());
+		}
+	}
+
+	Environment extendEnv(Function_T func, Vector<Object_T> args) {
+		Environment env = new Environment(func.getEnv());
+
+		for (int i = 0; i < func.getParameters().size(); i++) {
+			Identifier param = func.getParameters().get(i);
+			env.assignObject(param.getNodeValue(), args.get(i));
+		}
+		return env;
+	}
+
+	Object_T unWrapReturn(Object_T obj) {
+		if (obj instanceof Return_T) {
+			return ((Return_T) obj).getValue();
+		}
+		return obj;
 	}
 
 	boolean isTruth(Object_T condition) {

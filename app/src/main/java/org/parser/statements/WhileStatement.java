@@ -43,4 +43,12 @@ public class WhileStatement implements Statement {
 		this.body = body;
 	}
 
+	public Expression getCondition() {
+		return this.condition;
+	}
+
+	public BlockStatement getBody() {
+		return this.body;
+	}
+
 }

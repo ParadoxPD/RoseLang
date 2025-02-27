@@ -165,7 +165,7 @@ public class Lexer {
 			}
 
 		} else {
-			System.out.println("DEBUG set to FALSE");
+			// System.out.println("DEBUG set to FALSE");
 		}
 	}
 

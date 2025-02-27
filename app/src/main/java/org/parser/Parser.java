@@ -279,24 +279,56 @@ public class Parser {
 				return this.parseReturnStatement();
 			case TokenList.WHILE:
 				return this.parseWhileStatement();
+
+			case TokenList.IDENTIFIER:
+				return this.parseIdentifierStatement();
 			default:
 				return this.parseExpressionStatement();
 		}
 	}
 
+	Statement parseIdentifierStatement() {
+		// NOTE: MAYBE BUGGY?????
+		if (this.peekTokenIs(TokenList.ASSIGN)) {
+			return this.parseAssignmentStatement();
+		}
+		return this.parseExpressionStatement();
+	}
+
+	Statement parseAssignmentStatement() {
+
+		Identifier name = new Identifier(this.curr, this.curr.getTokenValue());
+		this.nextToken();
+		AssignmentStatement stm = new AssignmentStatement(this.curr, name);
+		this.nextToken();
+		Expression exp = this.parseExpression(PrecedenceList.LOWEST);
+		stm.setExpression(exp);
+		if (this.peekTokenIs(TokenList.SEMICOLON)) {
+			this.nextToken();
+		}
+
+		if (this.debug) {
+			name.print("Identifier Name :");
+			exp.print("Assigned Expression : ");
+			stm.print("Assignment Statement : ");
+		}
+		return stm;
+
+	}
+
 	Statement parseWhileStatement() {
 		WhileStatement stm = new WhileStatement(this.curr);
-		if (!expectPeek(TokenList.PAREN_OPEN)) {
+		if (!this.expectPeek(TokenList.PAREN_OPEN)) {
 			return null;
 		}
 
 		nextToken();
 		stm.setCondition(parseExpression(PrecedenceList.LOWEST));
 
-		if (!expectPeek(TokenList.PAREN_CLOSE)) {
+		if (!this.expectPeek(TokenList.PAREN_CLOSE)) {
 			return null;
 		}
-		if (!expectPeek(TokenList.BRACE_OPEN)) {
+		if (!this.expectPeek(TokenList.BRACE_OPEN)) {
 			return null;
 		}
 		stm.setBody(parseBlockStatement());
@@ -350,6 +382,9 @@ public class Parser {
 	}
 
 	LetStatement parseLetStatement() {
+		// FIX: Let Statements with function signature should not have a secondary
+		// identiifer
+
 		LetStatement stm = new LetStatement(this.curr);
 
 		if (!this.expectPeek(TokenList.IDENTIFIER)) {
@@ -472,8 +507,8 @@ public class Parser {
 	public void printProgram() {
 		if (debug)
 			this.program.print("Parsed Program : ");
-		else
-			System.out.println("DEBUG set to FALSE");
+		// else
+		// System.out.println("DEBUG set to FALSE");
 
 	}
 

@@ -35,4 +35,16 @@ public class Function_T implements Object_T {
 		return res;
 
 	}
+
+	public BlockStatement getBody() {
+		return this.body;
+	}
+
+	public Environment getEnv() {
+		return this.env;
+	}
+
+	public Vector<Identifier> getParameters() {
+		return this.parameters;
+	}
 }
