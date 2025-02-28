@@ -230,6 +230,8 @@ public class Evaluator {
 				return new Integer_T(leftVal * rightVal);
 			case "/":
 				return new Integer_T(leftVal / rightVal);
+			case "^":
+				return new Integer_T((int) Math.pow(leftVal, rightVal));
 			case "<":
 				return nativeBoolToBooleanObject(leftVal < rightVal);
 			case ">":
@@ -238,6 +240,10 @@ public class Evaluator {
 				return nativeBoolToBooleanObject(leftVal == rightVal);
 			case "!=":
 				return nativeBoolToBooleanObject(leftVal != rightVal);
+			case ">=":
+				return nativeBoolToBooleanObject(leftVal >= rightVal);
+			case "<=":
+				return nativeBoolToBooleanObject(leftVal <= rightVal);
 			default:
 				return new Error_T(
 						"Unknown operator : " + left.type() + " " + operator

@@ -7,35 +7,46 @@ import java.util.AbstractMap;
  * TokenList
  */
 public interface TokenList {
+
+	// Special
 	String ILLEGAL = "ILLEGAL";
 	String EOF = "EOF";
 
+	// Identifiers
 	String IDENTIFIER = "IDENTIFIER";
 
+	// DataTypes
 	String INT = "INT";
 
+	// Mathemetical Operators
 	String ASSIGN = "=";
 	String PLUS = "+";
 	String MINUS = "-";
 	String BANG = "!";
 	String ASTERISK = "*";
 	String SLASH = "/";
+	String CHARAT = "^";
 
+	// Logical Operators
 	String LT = "<";
 	String GT = ">";
-
+	String LTE = "<=";
+	String GTE = ">=";
 	String EQ = "==";
 	String NOT_EQ = "!=";
 
+	// Delemeters
 	String COMMA = ",";
 	String SEMICOLON = ";";
 
+	// Separators
 	String PAREN_OPEN = "(";
 	String PAREN_CLOSE = ")";
 
 	String BRACE_OPEN = "{";
 	String BRACE_CLOSE = "}";
 
+	// KEYWORDS
 	String LET = "LET";
 	String CONST = "CONST";
 	String RETURN = "RETURN";

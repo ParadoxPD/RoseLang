@@ -200,6 +200,9 @@ public class Parser {
 		this.registerInfixParser((TokenList.NOT_EQ), infixParser);
 		this.registerInfixParser((TokenList.LT), infixParser);
 		this.registerInfixParser((TokenList.GT), infixParser);
+		this.registerInfixParser((TokenList.GTE), infixParser);
+		this.registerInfixParser((TokenList.LTE), infixParser);
+		this.registerInfixParser((TokenList.CHARAT), infixParser);
 		this.registerInfixParser((TokenList.PAREN_OPEN), callExpressionParser);
 
 	}

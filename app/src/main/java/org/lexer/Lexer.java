@@ -75,9 +75,12 @@ public class Lexer {
 			case '+':
 				tok = new Token(TokenList.PLUS, this.curr);
 				break;
-
 			case '-':
 				tok = new Token(TokenList.MINUS, this.curr);
+				break;
+
+			case '^':
+				tok = new Token(TokenList.CHARAT, this.curr);
 				break;
 
 			case '!':
@@ -101,11 +104,25 @@ public class Lexer {
 				break;
 
 			case '<':
-				tok = new Token(TokenList.LT, this.curr);
+				if (this.peekChar() == '=') {
+					byte ch = this.curr;
+					this.readChar();
+					tok = new Token(TokenList.LTE, String.valueOf((char) ch) + (char) this.curr);
+				} else {
+					tok = new Token(TokenList.LT, this.curr);
+				}
+
 				break;
 
 			case '>':
-				tok = new Token(TokenList.GT, this.curr);
+				if (this.peekChar() == '=') {
+					byte ch = this.curr;
+					this.readChar();
+					tok = new Token(TokenList.GTE, String.valueOf((char) ch) + (char) this.curr);
+				} else {
+					tok = new Token(TokenList.GT, this.curr);
+				}
+
 				break;
 
 			case '{':
