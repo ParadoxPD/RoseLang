@@ -157,6 +157,13 @@ public class Parser {
 			}
 		};
 
+		PrefixParser stringParser = new PrefixParser() {
+			@Override
+			Expression parse() {
+				return new StringLiteral(curr, curr.getTokenValue());
+			}
+		};
+
 		this.registerPrefixParser((TokenList.IDENTIFIER), idenParser);
 		this.registerPrefixParser((TokenList.INT), integerParser);
 		this.registerPrefixParser((TokenList.BANG), prefixExpressionParser);
@@ -166,6 +173,7 @@ public class Parser {
 		this.registerPrefixParser((TokenList.PAREN_OPEN), groupedExpressionParser);
 		this.registerPrefixParser((TokenList.IF), ifExpressionParser);
 		this.registerPrefixParser((TokenList.FUNCTION), functionParser);
+		this.registerPrefixParser((TokenList.STRING), stringParser);
 
 		InfixParser infixParser = new InfixParser() {
 			@Override

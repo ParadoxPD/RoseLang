@@ -72,6 +72,8 @@ public class Evaluator {
 				return new Integer_T(i.getValue());
 			case BooleanLiteral b:
 				return b.getValue() ? Constants.TRUE : Constants.FALSE;
+			case StringLiteral s:
+				return new String_T(s.getValue());
 			case Identifier id:
 				return evalIdentifier(id, env);
 			default:
@@ -183,15 +185,20 @@ public class Evaluator {
 
 	Object_T evalInfixExpression(String operator, Object_T left, Object_T right) {
 		if (left instanceof Integer_T && right instanceof Integer_T) {
-			return evalIntegerInfixExpression(operator, left, right);
+			return this.evalIntegerInfixExpression(operator, left, right);
+
+		} else if (left instanceof String_T && right instanceof String_T) {
+			return this.evalStringInfixExpression(operator, left, right);
 
 		} else {
-			if (left.type().equals(right.type())) {
+			if (left.type().equals(right.type()) && left instanceof Boolean_T) {
 				switch (operator) {
 					case "==":
-						return nativeBoolToBooleanObject(left == right);
+						return this.nativeBoolToBooleanObject(((Boolean_T) left)
+								.getValue() == ((Boolean_T) right).getValue());
 					case "!=":
-						return nativeBoolToBooleanObject(left != right);
+						return this.nativeBoolToBooleanObject(((Boolean_T) left)
+								.getValue() != ((Boolean_T) right).getValue());
 					default:
 						return new Error_T(
 								"Unknown operator : " + left.type() + " " + operator
@@ -216,6 +223,14 @@ public class Evaluator {
 		}
 		return result;
 
+	}
+
+	Object_T evalStringInfixExpression(String operator, Object_T left, Object_T right) {
+
+		if (!operator.equals("+")) {
+			return new Error_T("Unknown Operator : " + left.type() + " " + operator + " " + right.type());
+		}
+		return new String_T(((String_T) left).getValue() + ((String_T) right).getValue());
 	}
 
 	Object_T evalIntegerInfixExpression(String operator, Object_T left, Object_T right) {

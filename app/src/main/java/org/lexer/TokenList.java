@@ -17,6 +17,7 @@ public interface TokenList {
 
 	// DataTypes
 	String INT = "INT";
+	String STRING = "STRING";
 
 	// Mathemetical Operators
 	String ASSIGN = "=";

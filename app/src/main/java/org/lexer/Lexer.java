@@ -132,6 +132,9 @@ public class Lexer {
 			case '}':
 				tok = new Token(TokenList.BRACE_CLOSE, this.curr);
 				break;
+			case '"':
+				tok = new Token(TokenList.STRING, this.readString());
+				break;
 
 			case 0:
 				tok = new Token(TokenList.EOF, TokenList.EOF);
@@ -161,6 +164,18 @@ public class Lexer {
 		}
 		this.readChar();
 		return tok;
+	}
+
+	String readString() {
+		int pos = this.readPos;
+		while (true) {
+			this.readChar();
+			if (this.curr == '"' || this.curr == 0) {
+				break;
+			}
+		}
+		return this.input.substring(pos, this.position);
+
 	}
 
 	public void tokenize() {
