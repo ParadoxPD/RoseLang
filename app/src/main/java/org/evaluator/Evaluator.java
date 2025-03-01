@@ -57,6 +57,16 @@ public class Evaluator {
 				if (this.isError(right))
 					return right;
 				return evalInfixExpression(ie.getOperator(), left, right);
+			case IndexExpression ie:
+				left = this.eval(ie.getLeft(), env);
+				if (this.isError(left)) {
+					return left;
+				}
+				Object_T index = this.eval(ie.getIndex(), env);
+				if (this.isError(index)) {
+					return index;
+				}
+				return this.evalIndexExpression(left, index);
 			case FunctionLiteral fl:
 				return this.addFunction(fl, env);
 			case CallExpression ce:
@@ -218,6 +228,24 @@ public class Evaluator {
 						"Type mismatch : " + left.type() + " " + operator + " " + right.type());
 			}
 		}
+	}
+
+	Object_T evalIndexExpression(Object_T left, Object_T index) {
+		if (left instanceof Array_T && index instanceof Integer_T) {
+			return this.evalArrayIndexExpression((Array_T) left, (Integer_T) index);
+		} else {
+			return new Error_T("Index Operator not supported : " + left.type());
+		}
+	}
+
+	Object_T evalArrayIndexExpression(Array_T left, Integer_T index) {
+		int idx = index.getValue();
+		int max = left.getValue().size() - 1;
+		if (idx < 0 || idx > max) {
+			return new Error_T("Array index out of range : " + idx);
+		}
+		return left.getValue().get(idx);
+
 	}
 
 	Vector<Object_T> evalExpressions(Vector<Expression> args, Environment env) {

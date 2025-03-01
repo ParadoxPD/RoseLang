@@ -18,19 +18,129 @@ public class BuiltIns {
 			@Override
 			public Object_T applyFunction(Vector<Object_T> args) {
 
-				if (args.size() != 1) {
+				int argCount = 1;
+				if (args.size() != argCount) {
 					return new Error_T(
-							"Wrong number of arguments : Required : 1 Got " + args.size());
+							"Wrong number of arguments : Required : " + argCount + " Got "
+									+ args.size());
 				}
+
 				switch (args.getFirst()) {
 					case String_T str:
 						return new Integer_T(str.getValue().length());
+					case Array_T arr:
+						return new Integer_T(arr.getValue().size());
 					default:
 						return new Error_T("Function len not supported for type : "
 								+ args.getFirst().type());
 				}
 			}
 		});
+		this.builtinFunctions.put("first", new Builtin_Function_T() {
+			@Override
+			public Object_T applyFunction(Vector<Object_T> args) {
+
+				int argCount = 1;
+				if (args.size() != argCount) {
+					return new Error_T(
+							"Wrong number of arguments : Required : " + argCount + " Got "
+									+ args.size());
+				}
+
+				switch (args.getFirst()) {
+					case Array_T arr:
+						return arr.getValue().getFirst();
+					default:
+						return new Error_T("Function first not supported for type : "
+								+ args.getFirst().type());
+				}
+			}
+		});
+		this.builtinFunctions.put("last", new Builtin_Function_T() {
+			@Override
+			public Object_T applyFunction(Vector<Object_T> args) {
+				int argCount = 1;
+
+				if (args.size() != argCount) {
+					return new Error_T(
+							"Wrong number of arguments : Required : " + argCount + " Got "
+									+ args.size());
+				}
+				switch (args.getFirst()) {
+					case Array_T arr:
+						return arr.getValue().getLast();
+					default:
+						return new Error_T("Function last not supported for type : "
+								+ args.getFirst().type());
+				}
+			}
+		});
+		this.builtinFunctions.put("push", new Builtin_Function_T() {
+			@Override
+			public Object_T applyFunction(Vector<Object_T> args) {
+				int argCount = 2;
+
+				if (args.size() != argCount) {
+					return new Error_T(
+							"Wrong number of arguments : Required : " + argCount + " Got "
+									+ args.size());
+				}
+				switch (args.getFirst()) {
+					case Array_T arr:
+						arr.getValue().addLast(args.get(1));
+						return arr;
+					default:
+						return new Error_T("Function push not supported for type : "
+								+ args.getFirst().type());
+				}
+			}
+		});
+		this.builtinFunctions.put("pop", new Builtin_Function_T() {
+			@Override
+			public Object_T applyFunction(Vector<Object_T> args) {
+				int argCount = 1;
+
+				if (args.size() != argCount) {
+					return new Error_T(
+							"Wrong number of arguments : Required : " + argCount + " Got "
+									+ args.size());
+				}
+				switch (args.getFirst()) {
+					case Array_T arr:
+						Object_T elem = arr.getValue().getLast();
+						arr.getValue().removeLast();
+						return elem;
+					default:
+						return new Error_T("Function pop not supported for type : "
+								+ args.getFirst().type());
+				}
+			}
+		});
+		this.builtinFunctions.put("shift", new Builtin_Function_T() {
+			@Override
+			public Object_T applyFunction(Vector<Object_T> args) {
+				int argCount = 1;
+
+				if (args.size() != argCount) {
+					return new Error_T(
+							"Wrong number of arguments : Required : " + argCount + " Got "
+									+ args.size());
+				}
+				switch (args.getFirst()) {
+					case Array_T arr:
+						Object_T elem = arr.getValue().getFirst();
+						arr.getValue().removeFirst();
+						return elem;
+					default:
+						return new Error_T("Function shift not supported for type : "
+								+ args.getFirst().type());
+				}
+			}
+		});
+
+		// TODO: Add more builtins like map , filter, sum , substr, ... for array and
+		// string
+
 	}
 
 	// public Object_T applyFunction(String funcName, Vector<Object_T> args) {

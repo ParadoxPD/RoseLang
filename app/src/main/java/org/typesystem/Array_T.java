@@ -18,7 +18,7 @@ public class Array_T implements Object_T {
 	public String inspect() {
 		String res = "[ ";
 		for (Object_T obj : this.value) {
-			res += obj.inspect();
+			res += obj.inspect() + ", ";
 		}
 		res += " ]";
 		return res;
