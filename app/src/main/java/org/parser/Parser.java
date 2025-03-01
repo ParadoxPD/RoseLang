@@ -164,6 +164,13 @@ public class Parser {
 			}
 		};
 
+		PrefixParser arrayParser = new PrefixParser() {
+			@Override
+			Expression parse() {
+				return new ArrayLiteral(curr, parseExpressionList(TokenList.SQUARE_BRACKET_CLOSE));
+			}
+		};
+
 		this.registerPrefixParser((TokenList.IDENTIFIER), idenParser);
 		this.registerPrefixParser((TokenList.INT), integerParser);
 		this.registerPrefixParser((TokenList.BANG), prefixExpressionParser);
@@ -171,6 +178,7 @@ public class Parser {
 		this.registerPrefixParser((TokenList.TRUE), booleanParser);
 		this.registerPrefixParser((TokenList.FALSE), booleanParser);
 		this.registerPrefixParser((TokenList.PAREN_OPEN), groupedExpressionParser);
+		this.registerPrefixParser((TokenList.SQUARE_BRACKET_OPEN), arrayParser);
 		this.registerPrefixParser((TokenList.IF), ifExpressionParser);
 		this.registerPrefixParser((TokenList.FUNCTION), functionParser);
 		this.registerPrefixParser((TokenList.STRING), stringParser);
@@ -193,9 +201,24 @@ public class Parser {
 			@Override
 			Expression parse(Expression function) {
 				CallExpression exp = new CallExpression(curr, function);
-				exp.addArguments(parseCallArguments());
+				exp.addArguments(parseExpressionList(TokenList.PAREN_CLOSE));
 				if (debug)
 					exp.print("Call Exp: ");
+				return exp;
+			}
+		};
+
+		InfixParser indexExpressionParser = new InfixParser() {
+			@Override
+			Expression parse(Expression left) {
+				IndexExpression exp = new IndexExpression(curr, left);
+
+				nextToken();
+				exp.setIndex(parseExpression(PrecedenceList.LOWEST));
+
+				if (!expectPeek(TokenList.SQUARE_BRACKET_CLOSE)) {
+					return null;
+				}
 				return exp;
 			}
 		};
@@ -212,6 +235,7 @@ public class Parser {
 		this.registerInfixParser((TokenList.LTE), infixParser);
 		this.registerInfixParser((TokenList.CHARAT), infixParser);
 		this.registerInfixParser((TokenList.PAREN_OPEN), callExpressionParser);
+		this.registerInfixParser((TokenList.SQUARE_BRACKET_OPEN), indexExpressionParser);
 
 	}
 
@@ -392,6 +416,30 @@ public class Parser {
 		return leftExp;
 	}
 
+	Vector<Expression> parseExpressionList(String end) {
+		Vector<Expression> elements = new Vector<Expression>();
+
+		if (this.peekTokenIs(end)) {
+			this.nextToken();
+			return elements;
+		}
+
+		this.nextToken();
+		elements.addElement(this.parseExpression(PrecedenceList.LOWEST));
+
+		while (this.peekTokenIs(TokenList.COMMA)) {
+			this.nextToken();
+			this.nextToken();
+			elements.addElement(this.parseExpression(PrecedenceList.LOWEST));
+		}
+
+		if (!this.expectPeek(end)) {
+			return null;
+		}
+		return elements;
+
+	}
+
 	LetStatement parseLetStatement() {
 		// FIX: Let Statements with function signature should not have a secondary
 		// identiifer
@@ -474,27 +522,6 @@ public class Parser {
 		}
 		return parameters;
 
-	}
-
-	Vector<Expression> parseCallArguments() {
-		Vector<Expression> args = new Vector<Expression>();
-
-		if (this.peekTokenIs(TokenList.PAREN_CLOSE)) {
-			this.nextToken();
-			return args;
-		}
-		this.nextToken();
-		args.addElement(this.parseExpression(PrecedenceList.LOWEST));
-
-		while (this.peekTokenIs(TokenList.COMMA)) {
-			this.nextToken();
-			this.nextToken();
-			args.addElement(this.parseExpression(PrecedenceList.LOWEST));
-		}
-		if (!this.expectPeek(TokenList.PAREN_CLOSE)) {
-			return null;
-		}
-		return args;
 	}
 
 	public Program parseProgram() {

@@ -47,6 +47,9 @@ public interface TokenList {
 	String BRACE_OPEN = "{";
 	String BRACE_CLOSE = "}";
 
+	String SQUARE_BRACKET_OPEN = "[";
+	String SQUARE_BRACKET_CLOSE = "]";
+
 	// KEYWORDS
 	String LET = "LET";
 	String CONST = "CONST";

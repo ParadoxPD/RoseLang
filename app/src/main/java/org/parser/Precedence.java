@@ -29,6 +29,7 @@ interface PrecedenceList {
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.CHARAT), EXPONENT),
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.PAREN_OPEN), CALL),
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.ASSIGN), ASSIGNMENT),
+			new AbstractMap.SimpleEntry<String, Integer>((TokenList.SQUARE_BRACKET_OPEN), CALL),
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.ASTERISK), PRODUCT));
 
 }

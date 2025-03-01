@@ -12,10 +12,12 @@ import java.util.Vector;
 
 public class Evaluator {
 	private Vector<EvaluatorError> errors;
+	private BuiltIns builtinFunctions;
 
 	public Evaluator() {
 
 		this.errors = new Vector<EvaluatorError>();
+		this.builtinFunctions = new BuiltIns();
 	}
 
 	public Object_T eval(Node node, Environment env) {
@@ -74,6 +76,12 @@ public class Evaluator {
 				return b.getValue() ? Constants.TRUE : Constants.FALSE;
 			case StringLiteral s:
 				return new String_T(s.getValue());
+			case ArrayLiteral arr:
+				Vector<Object_T> elements = this.evalExpressions(arr.getElements(), env);
+				if (elements.size() == 1 && this.isError(elements.getFirst())) {
+					return elements.getFirst();
+				}
+				return new Array_T(elements);
 			case Identifier id:
 				return evalIdentifier(id, env);
 			default:
@@ -305,6 +313,9 @@ public class Evaluator {
 
 		if (env.isObjectPresent(id.getValue())) {
 			return env.getObject(id.getValue());
+		} else if (this.builtinFunctions.isFunctionPresent(id.getValue())) {
+			return this.builtinFunctions.getBuiltIn(id.getValue());
+
 		} else {
 			return new Error_T("Identifier not found : " + id.getValue());
 		}
@@ -326,16 +337,19 @@ public class Evaluator {
 
 	}
 
-	Object_T applyFunction(Object_T func, Vector<Object_T> args) {
-		if (func instanceof Function_T) {
-			Function_T function = (Function_T) func;
+	Object_T applyFunction(Object_T obj, Vector<Object_T> args) {
+		switch (obj) {
+			case Function_T function:
 
-			Environment extendedEnv = this.extendEnv(function, args);
-			Object_T evaluated = this.eval(function.getBody(), extendedEnv);
-			return this.unWrapReturn(evaluated);
-		} else {
-			return new Error_T("Not a function : " + func.type());
+				Environment extendedEnv = this.extendEnv(function, args);
+				Object_T evaluated = this.eval(function.getBody(), extendedEnv);
+				return this.unWrapReturn(evaluated);
+			case Builtin_Function_T bnf:
+				return bnf.applyFunction(args);
+			default:
+				return new Error_T("Not a function : " + obj.type());
 		}
+
 	}
 
 	Environment extendEnv(Function_T func, Vector<Object_T> args) {

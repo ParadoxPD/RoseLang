@@ -67,6 +67,13 @@ public class Lexer {
 			case ')':
 				tok = new Token(TokenList.PAREN_CLOSE, this.curr);
 				break;
+			case '[':
+				tok = new Token(TokenList.SQUARE_BRACKET_OPEN, this.curr);
+				break;
+
+			case ']':
+				tok = new Token(TokenList.SQUARE_BRACKET_CLOSE, this.curr);
+				break;
 
 			case ',':
 				tok = new Token(TokenList.COMMA, this.curr);
