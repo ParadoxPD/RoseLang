@@ -4,11 +4,15 @@ import org.parser.*;
 import org.parser.statements.*;
 import org.parser.expressions.*;
 import org.typesystem.*;
+import org.typesystem.utils.*;
 import org.parser.literals.*;
 import org.environment.*;
 import org.error.*;
 
 import java.util.Vector;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
 
 public class Evaluator {
 	private Vector<EvaluatorError> errors;
@@ -92,8 +96,10 @@ public class Evaluator {
 					return elements.getFirst();
 				}
 				return new Array_T(elements);
+			case HashLiteral hl:
+				return this.evalHashLiteral(hl, env);
 			case Identifier id:
-				return evalIdentifier(id, env);
+				return this.evalIdentifier(id, env);
 			default:
 				return Constants.NULL;
 		}
@@ -233,6 +239,8 @@ public class Evaluator {
 	Object_T evalIndexExpression(Object_T left, Object_T index) {
 		if (left instanceof Array_T && index instanceof Integer_T) {
 			return this.evalArrayIndexExpression((Array_T) left, (Integer_T) index);
+		} else if (left instanceof Hash_T) {
+			return evalHashIndexExpression((Hash_T) left, index);
 		} else {
 			return new Error_T("Index Operator not supported : " + left.type());
 		}
@@ -246,6 +254,51 @@ public class Evaluator {
 		}
 		return left.getValue().get(idx);
 
+	}
+
+	Object_T evalHashIndexExpression(Hash_T hash, Object_T index) {
+		if (!(index instanceof Hashable)) {
+			return new Error_T("Unusable as hash key : " + index.type());
+		}
+		HashPair pair = hash.getPairs().get(((Hashable) index).hash());
+		if (pair == null) {
+			System.out.println("aaaaaaaaaaaaahhhhhhhh");
+			return new Null_T();
+		}
+		return pair.getValue();
+	}
+
+	Object_T evalHashLiteral(HashLiteral hl, Environment env) {
+		Map<HashKey, HashPair> pairs = new HashMap<HashKey, HashPair>() {
+			@Override
+			public HashPair get(Object key) {
+				Set<HashKey> keys = this.keySet();
+				for (HashKey k : keys) {
+					if (k.getKey() == ((HashKey) key).getKey()) {
+						return super.get(k);
+					}
+				}
+				return null;
+			}
+		};
+
+		for (Expression keyExp : hl.getElements().keySet()) {
+			Object_T key = this.eval(keyExp, env);
+			if (this.isError(key)) {
+				return key;
+			}
+			if (!(key instanceof Hashable)) {
+				return new Error_T("Unusable as hash key : " + key.type());
+			}
+			Object_T value = this.eval(hl.getElement(keyExp), env);
+			if (this.isError(value)) {
+				return value;
+			}
+
+			pairs.put(((Hashable) key).hash(), new HashPair(key, value));
+
+		}
+		return new Hash_T(pairs);
 	}
 
 	Vector<Object_T> evalExpressions(Vector<Expression> args, Environment env) {

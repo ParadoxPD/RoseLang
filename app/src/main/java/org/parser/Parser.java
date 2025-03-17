@@ -171,6 +171,36 @@ public class Parser {
 			}
 		};
 
+		PrefixParser hashLiteralParser = new PrefixParser() {
+			@Override
+			Expression parse() {
+				HashLiteral hash = new HashLiteral(curr, new HashMap<Expression, Expression>());
+
+				while (!peekTokenIs(TokenList.BRACE_CLOSE)) {
+					nextToken();
+					Expression key = parseExpression(PrecedenceList.LOWEST);
+
+					if (!expectPeek(TokenList.COLON)) {
+						return null;
+					}
+					nextToken();
+					Expression value = parseExpression(PrecedenceList.LOWEST);
+
+					hash.addElement(key, value);
+
+					if (!peekTokenIs(TokenList.BRACE_CLOSE) && !expectPeek(TokenList.COMMA)) {
+						return null;
+					}
+				}
+				if (!expectPeek(TokenList.BRACE_CLOSE)) {
+					return null;
+				}
+
+				return hash;
+
+			}
+		};
+
 		this.registerPrefixParser((TokenList.IDENTIFIER), idenParser);
 		this.registerPrefixParser((TokenList.INT), integerParser);
 		this.registerPrefixParser((TokenList.BANG), prefixExpressionParser);
@@ -178,6 +208,7 @@ public class Parser {
 		this.registerPrefixParser((TokenList.TRUE), booleanParser);
 		this.registerPrefixParser((TokenList.FALSE), booleanParser);
 		this.registerPrefixParser((TokenList.PAREN_OPEN), groupedExpressionParser);
+		this.registerPrefixParser((TokenList.BRACE_OPEN), hashLiteralParser);
 		this.registerPrefixParser((TokenList.SQUARE_BRACKET_OPEN), arrayParser);
 		this.registerPrefixParser((TokenList.IF), ifExpressionParser);
 		this.registerPrefixParser((TokenList.FUNCTION), functionParser);

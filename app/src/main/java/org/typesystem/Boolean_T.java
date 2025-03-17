@@ -1,6 +1,8 @@
 package org.typesystem;
 
-public class Boolean_T implements Object_T {
+import org.typesystem.utils.*;
+
+public class Boolean_T implements Object_T, Hashable {
 	boolean value;
 
 	public Boolean_T(boolean value) {
@@ -17,7 +19,13 @@ public class Boolean_T implements Object_T {
 		return this.value ? "true" : "false";
 	}
 
+	@Override
+	public HashKey hash() {
+		return new HashKey(this.type(), Hasher.hash(this.value));
+	}
+
 	public boolean getValue() {
 		return this.value;
 	}
+
 }

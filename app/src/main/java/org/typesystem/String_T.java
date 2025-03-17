@@ -1,6 +1,8 @@
 package org.typesystem;
 
-public class String_T implements Object_T {
+import org.typesystem.utils.*;
+
+public class String_T implements Object_T, Hashable {
 	String value;
 
 	public String_T(String value) {
@@ -15,6 +17,11 @@ public class String_T implements Object_T {
 	@Override
 	public String inspect() {
 		return this.value;
+	}
+
+	@Override
+	public HashKey hash() {
+		return new HashKey(this.type(), Hasher.hash(this.value));
 	}
 
 	public String getValue() {

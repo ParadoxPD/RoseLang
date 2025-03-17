@@ -39,6 +39,7 @@ public interface TokenList {
 	// Delemeters
 	String COMMA = ",";
 	String SEMICOLON = ";";
+	String COLON = ":";
 
 	// Separators
 	String PAREN_OPEN = "(";

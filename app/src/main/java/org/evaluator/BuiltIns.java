@@ -137,6 +137,16 @@ public class BuiltIns {
 				}
 			}
 		});
+		this.builtinFunctions.put("print", new Builtin_Function_T() {
+			@Override
+			public Object_T applyFunction(Vector<Object_T> args) {
+				for (Object_T arg : args) {
+					System.out.println(arg.inspect());
+				}
+				return new Null_T();
+			}
+
+		});
 
 		// TODO: Add more builtins like map , filter, sum , substr, ... for array and
 		// string

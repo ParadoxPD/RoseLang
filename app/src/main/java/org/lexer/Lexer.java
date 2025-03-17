@@ -59,6 +59,9 @@ public class Lexer {
 			case ';':
 				tok = new Token(TokenList.SEMICOLON, this.curr);
 				break;
+			case ':':
+				tok = new Token(TokenList.COLON, this.curr);
+				break;
 
 			case '(':
 				tok = new Token(TokenList.PAREN_OPEN, this.curr);

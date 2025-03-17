@@ -5,6 +5,7 @@ public interface TypeList {
 	String STRING_OBJECT = "STRING";
 	String BOOLEAN_OBJECT = "BOOLEAN";
 	String ARRAY_OBJECT = "ARRAY";
+	String HASH_OBJECT = "HASH";
 	String NULL_OBJECT = "NULL";
 	String RETURN_OBJECT = "RETURN";
 	String ERROR_OBJECT = "ERROR";
