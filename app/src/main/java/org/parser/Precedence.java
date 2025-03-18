@@ -14,7 +14,8 @@ interface PrecedenceList {
 	int PRODUCT = 11;// *
 	int EXPONENT = 12;
 	int PREFIX = 14;// -X or !X
-	int CALL = 16; // func(x)
+	int CALL = 17; // func(x)
+	int DOT = 16; // func(x)
 
 	Map<String, Integer> Precedences = Map.ofEntries(
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.EQ), EQUALS),
@@ -30,6 +31,7 @@ interface PrecedenceList {
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.PAREN_OPEN), CALL),
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.ASSIGN), ASSIGNMENT),
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.SQUARE_BRACKET_OPEN), CALL),
+			new AbstractMap.SimpleEntry<String, Integer>((TokenList.DOT), DOT),
 			new AbstractMap.SimpleEntry<String, Integer>((TokenList.ASTERISK), PRODUCT));
 
 }

@@ -20,6 +20,9 @@ abstract class InfixParser {
 
 }
 
+// NOTE: Implement ternary operation
+// NOTE: Implement dot operation
+//
 public class Parser {
 
 	private Vector<Token> tokens;
@@ -242,6 +245,23 @@ public class Parser {
 
 		};
 
+		InfixParser dotParser = new InfixParser() {
+			@Override
+			Expression parse(Expression left) {
+				DotExpression exp = new DotExpression(curr, left);
+
+				int precedence = currPrecedence();
+				nextToken();
+				Expression right = parseExpression(precedence);
+				System.out.println(precedence);
+				right.print("Right Dot:");
+				exp.setRight(right);
+
+				return exp;
+			}
+
+		};
+
 		InfixParser callExpressionParser = new InfixParser() {
 			@Override
 			Expression parse(Expression function) {
@@ -279,6 +299,7 @@ public class Parser {
 		this.registerInfixParser((TokenList.GTE), infixParser);
 		this.registerInfixParser((TokenList.LTE), infixParser);
 		this.registerInfixParser((TokenList.CHARAT), infixParser);
+		this.registerInfixParser((TokenList.DOT), dotParser);
 		this.registerInfixParser((TokenList.PAREN_OPEN), callExpressionParser);
 		this.registerInfixParser((TokenList.SQUARE_BRACKET_OPEN), indexExpressionParser);
 

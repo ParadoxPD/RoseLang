@@ -53,7 +53,7 @@ public class Evaluator {
 				if (this.isError(right))
 					return right;
 				return this.evalPrefixExpression(pe.getOperator(), right);
-			case InfixExpression ie:
+			case InfixExpression ie when !(ie instanceof DotExpression):
 				Object_T left = this.eval(ie.getLeft(), env);
 				if (this.isError(left))
 					return left;
@@ -83,6 +83,25 @@ public class Evaluator {
 					return args.get(0);
 				}
 				return this.applyFunction(func, args);
+
+			case DotExpression de:
+				if (de.getRight() instanceof CallExpression) {
+
+					CallExpression c = (CallExpression) de.getRight();
+					func = this.eval(c.getFunction(), env);
+					if (this.isError(func)) {
+						return func;
+					}
+					c.addArgument(de.getLeft());
+					args = this.evalExpressions(c.getArguments(),
+							env);
+					if (args.size() == 1 && this.isError(args.get(0))) {
+						return args.get(0);
+					}
+					return this.applyFunction(func, args);
+				} else {
+					return new Error_T("Wrong Type : " + de.getRight().getClass());
+				}
 
 			case IntegerLiteral i:
 				return new Integer_T(i.getValue());
