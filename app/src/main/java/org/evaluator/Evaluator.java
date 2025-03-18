@@ -86,6 +86,8 @@ public class Evaluator {
 
 			case IntegerLiteral i:
 				return new Integer_T(i.getValue());
+			case FloatLiteral f:
+				return new Float_T(f.getValue());
 			case BooleanLiteral b:
 				return b.getValue() ? Constants.TRUE : Constants.FALSE;
 			case StringLiteral s:
@@ -210,6 +212,9 @@ public class Evaluator {
 	Object_T evalInfixExpression(String operator, Object_T left, Object_T right) {
 		if (left instanceof Integer_T && right instanceof Integer_T) {
 			return this.evalIntegerInfixExpression(operator, left, right);
+
+		} else if (left instanceof Float_T && right instanceof Float_T) {
+			return this.evalFloatInfixExpression(operator, left, right);
 
 		} else if (left instanceof String_T && right instanceof String_T) {
 			return this.evalStringInfixExpression(operator, left, right);
@@ -355,6 +360,39 @@ public class Evaluator {
 		}
 	}
 
+	Object_T evalFloatInfixExpression(String operator, Object_T left, Object_T right) {
+		float leftVal = ((Float_T) left).getValue();
+		float rightVal = ((Float_T) right).getValue();
+		switch (operator) {
+			case "+":
+				return new Float_T(leftVal + rightVal);
+			case "-":
+				return new Float_T(leftVal - rightVal);
+			case "*":
+				return new Float_T(leftVal * rightVal);
+			case "/":
+				return new Float_T(leftVal / rightVal);
+			case "^":
+				return new Float_T((float) Math.pow(leftVal, rightVal));
+			case "<":
+				return nativeBoolToBooleanObject(leftVal < rightVal);
+			case ">":
+				return nativeBoolToBooleanObject(leftVal > rightVal);
+			case "==":
+				return nativeBoolToBooleanObject(leftVal == rightVal);
+			case "!=":
+				return nativeBoolToBooleanObject(leftVal != rightVal);
+			case ">=":
+				return nativeBoolToBooleanObject(leftVal >= rightVal);
+			case "<=":
+				return nativeBoolToBooleanObject(leftVal <= rightVal);
+			default:
+				return new Error_T(
+						"Unknown operator : " + left.type() + " " + operator
+								+ " " + right.type());
+		}
+	}
+
 	Object_T evalBangOperatorExpression(Object_T right) {
 		switch (right) {
 			case Boolean_T bool:
@@ -371,10 +409,11 @@ public class Evaluator {
 	}
 
 	Object_T evalMinusOperatorExpression(Object_T right) {
-		if (!(right instanceof Integer_T)) {
+		if (!(right instanceof Integer_T || right instanceof Float_T)) {
 			return new Error_T("Unknown operator : " + right.type());
 		}
-		return new Integer_T(-(((Integer_T) right).getValue()));
+		return (right instanceof Integer_T) ? new Integer_T(-(((Integer_T) right).getValue()))
+				: new Float_T(-(((Float_T) right).getValue()));
 	}
 
 	Object_T evalIfExpression(IfExpression ie, Environment env) {

@@ -51,6 +51,7 @@ public class Parser {
 	}
 
 	void registerAllParsers() {
+
 		PrefixParser integerParser = new PrefixParser() {
 			@Override
 			public Expression parse() {
@@ -58,6 +59,18 @@ public class Parser {
 
 				// TODO: ADD ERROR CHECKING FOR INTEGER VALUE
 				int val = Integer.parseInt(curr.getTokenValue());
+				lit.setValue(val);
+				return lit;
+
+			}
+		};
+		PrefixParser floatParser = new PrefixParser() {
+			@Override
+			public Expression parse() {
+				FloatLiteral lit = new FloatLiteral(curr);
+
+				// TODO: ADD ERROR CHECKING FOR FLOAT VALUE
+				float val = Float.parseFloat(curr.getTokenValue());
 				lit.setValue(val);
 				return lit;
 
@@ -203,6 +216,7 @@ public class Parser {
 
 		this.registerPrefixParser((TokenList.IDENTIFIER), idenParser);
 		this.registerPrefixParser((TokenList.INT), integerParser);
+		this.registerPrefixParser((TokenList.FLOAT), floatParser);
 		this.registerPrefixParser((TokenList.BANG), prefixExpressionParser);
 		this.registerPrefixParser((TokenList.MINUS), prefixExpressionParser);
 		this.registerPrefixParser((TokenList.TRUE), booleanParser);

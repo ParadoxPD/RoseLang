@@ -17,6 +17,7 @@ public interface TokenList {
 
 	// DataTypes
 	String INT = "INT";
+	String FLOAT = "FLOAT";
 	String STRING = "STRING";
 
 	// Mathemetical Operators
@@ -40,6 +41,7 @@ public interface TokenList {
 	String COMMA = ",";
 	String SEMICOLON = ";";
 	String COLON = ":";
+	String DOT = ".";
 
 	// Separators
 	String PAREN_OPEN = "(";

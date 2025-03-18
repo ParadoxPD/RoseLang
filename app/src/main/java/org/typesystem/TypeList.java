@@ -2,6 +2,7 @@ package org.typesystem;
 
 public interface TypeList {
 	String INTEGER_OBJECT = "INTEGER";
+	String FLOAT_OBJECT = "FLOAT";
 	String STRING_OBJECT = "STRING";
 	String BOOLEAN_OBJECT = "BOOLEAN";
 	String ARRAY_OBJECT = "ARRAY";

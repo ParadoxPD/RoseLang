@@ -63,6 +63,10 @@ public class Lexer {
 				tok = new Token(TokenList.COLON, this.curr);
 				break;
 
+			case '.':
+				tok = new Token(TokenList.DOT, this.curr);
+				break;
+
 			case '(':
 				tok = new Token(TokenList.PAREN_OPEN, this.curr);
 				break;
@@ -165,7 +169,20 @@ public class Lexer {
 						this.readChar();
 					}
 					String number = this.input.substring(currPos, this.position);
-					tok = new Token(TokenList.INT, number);
+
+					if ((char) this.curr == '.') {
+						System.out.println("Float");
+						this.readChar();
+						while (Token.isDigit((char) this.curr)) {
+							this.readChar();
+						}
+						number = this.input.substring(currPos, this.position);
+						tok = new Token(TokenList.FLOAT, number);
+
+					} else {
+
+						tok = new Token(TokenList.INT, number);
+					}
 					return tok;
 				} else {
 					tok = new Token(TokenList.ILLEGAL, String.valueOf(this.curr));
