@@ -74,31 +74,14 @@ public class Evaluator {
 			case FunctionLiteral fl:
 				return this.addFunction(fl, env);
 			case CallExpression ce:
-				Object_T func = this.eval(ce.getFunction(), env);
-				if (this.isError(func)) {
-					return func;
-				}
-				Vector<Object_T> args = this.evalExpressions(ce.getArguments(), env);
-				if (args.size() == 1 && this.isError(args.get(0))) {
-					return args.get(0);
-				}
-				return this.applyFunction(func, args);
+				return this.evalCallOperation(ce, env);
 
 			case DotExpression de:
 				if (de.getRight() instanceof CallExpression) {
 
 					CallExpression c = (CallExpression) de.getRight();
-					func = this.eval(c.getFunction(), env);
-					if (this.isError(func)) {
-						return func;
-					}
 					c.addArgument(de.getLeft());
-					args = this.evalExpressions(c.getArguments(),
-							env);
-					if (args.size() == 1 && this.isError(args.get(0))) {
-						return args.get(0);
-					}
-					return this.applyFunction(func, args);
+					return this.evalCallOperation(c, env);
 				} else {
 					return new Error_T("Wrong Type : " + de.getRight().getClass());
 				}
@@ -143,6 +126,19 @@ public class Evaluator {
 
 		}
 		return result;
+	}
+
+	Object_T evalCallOperation(CallExpression ce, Environment env) {
+		Object_T func = this.eval(ce.getFunction(), env);
+		if (this.isError(func)) {
+			return func;
+		}
+		Vector<Object_T> args = this.evalExpressions(ce.getArguments(), env);
+		if (args.size() == 1 && this.isError(args.get(0))) {
+			return args.get(0);
+		}
+		return this.applyFunction(func, args);
+
 	}
 
 	Object_T evalLetStatement(LetStatement ls, Environment env) {
