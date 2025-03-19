@@ -52,11 +52,12 @@ class REPL {
 					Object_T object = evaluator.eval(program, globalEnv);
 					// System.out.println(object);
 
-					if (object != null) {
-						System.out.println(object.inspect());
-					} else {
-						System.out.println("Object is null");
-					}
+					// if (object != null) {
+					// System.out.println(object.inspect());
+
+					// } else {
+					// System.out.println("Object is null");
+					// }
 				}
 
 				for (ParserError er : errors) {

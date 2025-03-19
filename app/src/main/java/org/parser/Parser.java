@@ -21,8 +21,7 @@ abstract class InfixParser {
 }
 
 // NOTE: Implement ternary operation
-// NOTE: Implement dot operation
-//
+
 public class Parser {
 
 	private Vector<Token> tokens;
