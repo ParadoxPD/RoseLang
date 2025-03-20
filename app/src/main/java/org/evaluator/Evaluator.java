@@ -472,7 +472,7 @@ public class Evaluator {
 
 	}
 
-	Object_T applyFunction(Object_T obj, Vector<Object_T> args) {
+	public Object_T applyFunction(Object_T obj, Vector<Object_T> args) {
 		switch (obj) {
 			case Function_T function:
 
