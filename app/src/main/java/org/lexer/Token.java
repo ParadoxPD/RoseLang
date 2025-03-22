@@ -4,12 +4,12 @@ public class Token {
 	private String type;
 	private String tokenValue;
 
-	Token(String type, String tokenValue) {
+	public Token(String type, String tokenValue) {
 		this.type = (type);
 		this.tokenValue = tokenValue;
 	}
 
-	Token(String type, byte ch) {
+	public Token(String type, byte ch) {
 		this.type = (type);
 		this.tokenValue = (char) ch + "";
 	}

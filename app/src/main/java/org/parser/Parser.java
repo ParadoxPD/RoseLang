@@ -109,6 +109,7 @@ public class Parser {
 				Expression exp = parseExpression(PrecedenceList.LOWEST);
 
 				if (!expectPeek(TokenList.PAREN_CLOSE)) {
+					errors.addElement(new ParserError("Missing Symbol", "( missing"));
 					return null;
 
 				}
@@ -121,6 +122,7 @@ public class Parser {
 			Expression parse() {
 				IfExpression stm = new IfExpression(curr);
 				if (!expectPeek(TokenList.PAREN_OPEN)) {
+					errors.addElement(new ParserError("Missing Symbol", "( missing"));
 					return null;
 				}
 
@@ -128,9 +130,11 @@ public class Parser {
 				stm.setCondition(parseExpression(PrecedenceList.LOWEST));
 
 				if (!expectPeek(TokenList.PAREN_CLOSE)) {
+					errors.addElement(new ParserError("Missing Symbol", "( missing"));
 					return null;
 				}
 				if (!expectPeek(TokenList.BRACE_OPEN)) {
+					errors.addElement(new ParserError("Missing Symbol", "{ missing"));
 					return null;
 				}
 				stm.setConsequence(parseBlockStatement());
@@ -138,6 +142,7 @@ public class Parser {
 				if (peekTokenIs(TokenList.ELSE)) {
 					nextToken();
 					if (!expectPeek(TokenList.BRACE_OPEN)) {
+						errors.addElement(new ParserError("Missing Symbol", "{ missing"));
 						return null;
 					}
 					stm.setAlternative(parseBlockStatement());
@@ -152,16 +157,19 @@ public class Parser {
 				FunctionLiteral fnt = new FunctionLiteral(curr);
 
 				if (!expectPeek(TokenList.IDENTIFIER)) {
+					errors.addElement(new ParserError("Identifier missing", "Function needs a name"));
 					return null;
 				}
 				fnt.setName(new Identifier(curr, curr.getTokenValue()));
 
 				if (!expectPeek(TokenList.PAREN_OPEN)) {
+					errors.addElement(new ParserError("Missing Symbol", "( missing"));
 					return null;
 				}
 				fnt.addParameters(parseFunctionParameters());
 
 				if (!expectPeek(TokenList.BRACE_OPEN)) {
+					errors.addElement(new ParserError("Missing Symbol", "{ missing"));
 					return null;
 				}
 				fnt.addBody(parseBlockStatement());
@@ -196,6 +204,7 @@ public class Parser {
 					Expression key = parseExpression(PrecedenceList.LOWEST);
 
 					if (!expectPeek(TokenList.COLON)) {
+						errors.addElement(new ParserError("Missing Symbol", ": missing"));
 						return null;
 					}
 					nextToken();
@@ -204,10 +213,12 @@ public class Parser {
 					hash.addElement(key, value);
 
 					if (!peekTokenIs(TokenList.BRACE_CLOSE) && !expectPeek(TokenList.COMMA)) {
+						errors.addElement(new ParserError("Missing Symbol", "}, missing"));
 						return null;
 					}
 				}
 				if (!expectPeek(TokenList.BRACE_CLOSE)) {
+					errors.addElement(new ParserError("Missing Symbol", "} missing"));
 					return null;
 				}
 
@@ -264,7 +275,14 @@ public class Parser {
 		InfixParser callExpressionParser = new InfixParser() {
 			@Override
 			Expression parse(Expression function) {
-				CallExpression exp = new CallExpression(curr, function);
+
+				System.out.println("FUNCTION : " + function);
+				CallExpression exp;
+				if (function == null) {
+					exp = new CallExpression(curr, new Identifier(new Token("test", "test"), "test"));
+				} else {
+					exp = new CallExpression(curr, function);
+				}
 				exp.addArguments(parseExpressionList(TokenList.PAREN_CLOSE));
 				if (debug)
 					exp.print("Call Exp: ");
@@ -281,6 +299,7 @@ public class Parser {
 				exp.setIndex(parseExpression(PrecedenceList.LOWEST));
 
 				if (!expectPeek(TokenList.SQUARE_BRACKET_CLOSE)) {
+					errors.addElement(new ParserError("Missing Symbol", "] missing"));
 					return null;
 				}
 				return exp;
@@ -419,6 +438,7 @@ public class Parser {
 	Statement parseWhileStatement() {
 		WhileStatement stm = new WhileStatement(this.curr);
 		if (!this.expectPeek(TokenList.PAREN_OPEN)) {
+			errors.addElement(new ParserError("Missing Symbol", "( missing"));
 			return null;
 		}
 
@@ -426,9 +446,11 @@ public class Parser {
 		stm.setCondition(parseExpression(PrecedenceList.LOWEST));
 
 		if (!this.expectPeek(TokenList.PAREN_CLOSE)) {
+			errors.addElement(new ParserError("Missing Symbol", ") missing"));
 			return null;
 		}
 		if (!this.expectPeek(TokenList.BRACE_OPEN)) {
+			errors.addElement(new ParserError("Missing Symbol", "{ missing"));
 			return null;
 		}
 		stm.setBody(parseBlockStatement());
@@ -499,6 +521,7 @@ public class Parser {
 		}
 
 		if (!this.expectPeek(end)) {
+			errors.addElement(new ParserError("Missing Symbol", "Expression not complete"));
 			return null;
 		}
 		return elements;
@@ -512,12 +535,15 @@ public class Parser {
 		LetStatement stm = new LetStatement(this.curr);
 
 		if (!this.expectPeek(TokenList.IDENTIFIER)) {
+			errors.addElement(new ParserError("Missing Symbol", "Identifier missing"));
 			return null;
 		}
 
 		stm.setName(new Identifier(this.curr, this.curr.getTokenValue()));
 
 		if (!this.expectPeek(TokenList.ASSIGN)) {
+
+			errors.addElement(new ParserError("Missing Symbol", "= missing"));
 			return null;
 		}
 
@@ -583,6 +609,7 @@ public class Parser {
 		}
 
 		if (!this.expectPeek(TokenList.PAREN_CLOSE)) {
+			errors.addElement(new ParserError("Missing Symbol", ") missing"));
 			return null;
 		}
 		return parameters;

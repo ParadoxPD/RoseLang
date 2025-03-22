@@ -144,7 +144,7 @@ public class BuiltIns {
 				for (Object_T arg : args) {
 					System.out.println(arg.inspect());
 				}
-				return new Null_T();
+				return Constants.NULL;
 			}
 
 		});
@@ -231,36 +231,30 @@ public class BuiltIns {
 				}
 				switch (args.getFirst()) {
 					case Array_T arr:
-					float a = 0;
-					int b = 0;
-					for(Object_T obj:arr.getValue()){
-						if(obj instanceof Integer_T){
-							b+=((Integer_T)obj).getValue();
+						float a = 0;
+						int b = 0;
+						for (Object_T obj : arr.getValue()) {
+							if (obj instanceof Integer_T) {
+								b += ((Integer_T) obj).getValue();
+							} else if (obj instanceof Float_T) {
+								a += ((Float_T) obj).getValue();
+							}
 						}
-						else if(obj instanceof Float_T){
-							a+=((Float_T)obj).getValue();
+						if (a > 0) {
+							return new Float_T(a + b);
+						} else {
+							return new Integer_T(b);
 						}
-					}
-					if(a>0){
-						return new Float_T(a+b);
-					}
-					else{
-						return new Integer_T(b);
-					}
 					default:
 						return new Error_T("Function shift not supported for type : "
 								+ args.getFirst().type());
 				}
 
-
-				
 			}
 
 		});
 
-
-		// TODO: Add more builtins like sum , substr, ... for array and
-		// string
+		// TODO: Add more builtins like substr, ... for array and string
 
 	}
 

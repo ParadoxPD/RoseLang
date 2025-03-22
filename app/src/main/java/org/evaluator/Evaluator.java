@@ -178,7 +178,7 @@ public class Evaluator {
 			condition = this.eval(condn, env);
 
 		}
-		return res != null ? res : new Null_T();
+		return res != null ? res : Constants.NULL;
 	}
 
 	Object_T evalAssignmentStatement(AssignmentStatement as, Environment env) {
@@ -283,7 +283,7 @@ public class Evaluator {
 		HashPair pair = hash.getPairs().get(((Hashable) index).hash());
 		if (pair == null) {
 			System.out.println("aaaaaaaaaaaaahhhhhhhh");
-			return new Null_T();
+			return Constants.NULL;
 		}
 		return pair.getValue();
 	}
