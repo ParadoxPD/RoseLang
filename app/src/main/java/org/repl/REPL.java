@@ -10,7 +10,7 @@ import org.evaluator.Evaluator;
 import java.util.Scanner;
 import java.util.Vector;
 
-class REPL {
+public class REPL {
 
 	public static void main(String[] args) {
 
