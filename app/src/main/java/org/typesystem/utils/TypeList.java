@@ -1,4 +1,4 @@
-package org.typesystem;
+package org.typesystem.utils;
 
 public interface TypeList {
 	String INTEGER_OBJECT = "INTEGER";

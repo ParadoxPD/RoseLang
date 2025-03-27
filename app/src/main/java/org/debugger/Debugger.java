@@ -1,9 +1,10 @@
 package org.debugger;
 
 import java.util.Vector;
+import org.parser.*;
+import org.lexer.*;
 
 public class Debugger {
-
   boolean debug;
   DebugLevel logLevel;
 
@@ -18,12 +19,19 @@ public class Debugger {
     }
   }
 
-  public void log(String message, Vector<Object> objs) {
+  public void log(String message, Vector<?> objs) {
     if (this.debug) {
       System.out.println(message);
       for (Object obj : objs) {
-        System.out.println("Object : " + obj + "\nClass" + obj.getClass());
+        switch (obj) {
+          case Token tok:
+            System.out.println("Object : " + tok + "\nValue: " + tok.printToken());
+            break;
+          default:
+            break;
+        }
       }
     }
   }
+
 }

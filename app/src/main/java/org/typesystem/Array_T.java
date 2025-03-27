@@ -1,6 +1,7 @@
 package org.typesystem;
 
 import java.util.Vector;
+import org.typesystem.utils.*;
 
 public class Array_T implements Object_T {
 	Vector<Object_T> value;

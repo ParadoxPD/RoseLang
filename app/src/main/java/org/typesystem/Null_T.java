@@ -1,5 +1,7 @@
 package org.typesystem;
 
+import org.typesystem.utils.*;
+
 public class Null_T implements Object_T {
 	@Override
 	public String type() {

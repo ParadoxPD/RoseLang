@@ -39,7 +39,7 @@ public class Token {
 
 	}
 
-	public void printToken() {
-		System.out.println("{Type: " + this.getType() + " Value: " + this.tokenValue + "}");
+	public String printToken() {
+		return ("{Type: " + this.getType() + " Value: " + this.tokenValue + "}");
 	}
 }

@@ -48,19 +48,19 @@ public class Code {
 
     }
 
-    Something readOperands(Definition def, byte[] ins){
+    Something readOperands(Definition def, byte[] ins) {
         int[] operands = new int[def.operandWidth.length];
         int offset = 0;
 
-        for(int i =0;i<def.operandWidth.length;i++){
-            switch(def.operandWidth[i]){
+        for (int i = 0; i < def.operandWidth.length; i++) {
+            switch (def.operandWidth[i]) {
                 case 2:
-                operands[i] = readUint(ins[offset:]);
-                break;
+                    // operands[i] = readUint(ins[offset:]);
+                    break;
             }
             offset += def.operandWidth[i];
         }
-        return new Something(operands,offset);
+        return new Something(operands, offset);
     }
 
 }

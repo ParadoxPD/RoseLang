@@ -2,6 +2,8 @@ package org.typesystem;
 
 import java.util.Vector;
 
+import org.typesystem.utils.*;
+
 public abstract class Builtin_Function_T implements Object_T {
 
 	public Builtin_Function_T() {
