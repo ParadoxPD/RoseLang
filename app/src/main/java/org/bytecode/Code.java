@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 interface OpCodes {
     byte OpConstant = 1;
-
 }
 
 public class Code {
