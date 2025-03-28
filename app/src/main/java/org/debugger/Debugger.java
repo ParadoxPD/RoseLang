@@ -19,6 +19,12 @@ public class Debugger {
     }
   }
 
+  public void log(String message,DebugLevel level) {
+    if (this.logLevel == level) {
+      System.out.println(message);
+    }
+  }
+
   public void log(String message, Vector<?> objs) {
     if (this.debug) {
       System.out.println(message);
@@ -35,3 +41,5 @@ public class Debugger {
   }
 
 }
+
+

@@ -63,6 +63,11 @@ public class Code {
         return new Something(operands, offset);
     }
 
+    static String toString(byte[] ins) {
+        String res = "";
+return res;
+    }
+
 }
 
 class Something {
