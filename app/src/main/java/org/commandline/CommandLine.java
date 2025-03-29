@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.repl.*;
+import org.compiler.*;
 
 public class CommandLine {
     public static void main(String args[]) {
@@ -22,6 +23,7 @@ public class CommandLine {
             REPL.main(arr);
         } else if (parsedArgs.containsKey("--compile")) {
             System.out.println("Compile");
+            Compiler.main(args);
         } else if (parsedArgs.containsKey("--help")) {
             printHelp();
         } else {
