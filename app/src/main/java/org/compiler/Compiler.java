@@ -6,7 +6,7 @@ import org.parser.statements.*;
 import org.parser.expressions.*;
 import org.parser.literals.*;
 import org.error.*;
-import org.typesystem.Object_T;
+import org.typesystem.*;
 import org.bytecode.utils.*;
 import org.bytecode.*;
 import org.lexer.*;
@@ -15,13 +15,18 @@ import java.util.*;
 
 public class Compiler {
 
-    byte[] instructions;
-    Object_T[] constants;
+    Vector<Byte> instructions;
+    Vector<Object_T> constants;
 
     Compiler() {
-        this.instructions = null;
-        this.constants = null;
+        this.instructions = new Vector<Byte>();
+        this.constants = new Vector<Object_T>();
 
+    }
+
+    int addConstant(Object_T obj) {
+        this.constants.add(obj);
+        return this.constants.size() - 1;
     }
 
     void compile(Node node) {
@@ -41,11 +46,27 @@ public class Compiler {
                 break;
 
             case IntegerLiteral il:
+                Integer_T integer = new Integer_T(il.getValue());
+                this.emit(OpCodes.OpConstant, this.addConstant(integer));
                 break;
 
             default:
                 break;
         }
+
+    }
+
+    int emit(byte op, int... operands) {
+        byte[] ins = new Code().make(op, operands);
+        int pos = this.addInstuctions(ins);
+        return pos;
+    }
+
+    int addInstuctions(byte[] ins) {
+        int pos = this.instructions.size();
+        for (byte in : ins)
+            this.instructions.add(in);
+        return pos;
 
     }
 
@@ -74,7 +95,9 @@ public class Compiler {
     }
 
     public static void main(String[] args) {
-
+        Compiler cmp = new Compiler();
+        cmp.compile(cmp.parse("1+2"));
+        System.out.println(new Code().toString(cmp.instructions));
     }
 
 }

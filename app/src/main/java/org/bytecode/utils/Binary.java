@@ -1,5 +1,7 @@
 package org.bytecode.utils;
 
+import java.util.*;
+
 public class Binary {
     public static void putUint16(byte[] ins, short op, int offset) {
         ins[offset] = (byte) ((op >> 8) & 0xff);

@@ -2,9 +2,11 @@ package org.bytecode;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 
 import org.bytecode.utils.Binary;
 import org.bytecode.utils.Definition;
+import org.bytecode.utils.Helper;
 import org.bytecode.utils.OpCodes;
 
 public class Code {
@@ -24,7 +26,7 @@ public class Code {
 
     }
 
-    byte[] make(byte op, int... operands) {
+    public byte[] make(byte op, int... operands) {
         Definition def = definitions.get(op);
         if (def == null) {
             return new byte[] {};
@@ -54,14 +56,14 @@ public class Code {
         return instruction;
     }
 
-    Something readOperands(Definition def, byte[] ins, int offset1) {
+    static Something readOperands(Definition def, Vector<Byte> ins, int offset1) {
         int[] operands = new int[def.operandWidth.length];
         int offset = 0;
 
         for (int i = 0; i < def.operandWidth.length; i++) {
             switch (def.operandWidth[i]) {
                 case 2:
-                    operands[i] = readUint16(ins, offset + offset1);
+                    operands[i] = readUint16(Helper.vectorToByteArray(ins), offset + offset1);
                     break;
             }
             offset += def.operandWidth[i];
@@ -69,17 +71,18 @@ public class Code {
         return new Something(operands, offset);
     }
 
-    int readUint16(byte[] ins, int offset) {
+    static int readUint16(byte[] ins, int offset) {
         return Binary.readUint16(ins, offset);
     }
 
-    String toString(byte[] ins) {
+    public String toString(Vector<Byte> ins) {
         String res = "";
-        for (int i = 0; i < ins.length; i++) {
-            Definition def = this.lookUp(ins[i]);
+        int i = 0;
+        while (i < ins.size()) {
+            Definition def = this.lookUp(ins.get(i));
             if (def != null) {
                 Something some = readOperands(def, ins, i + 1);
-                res += i + " " + fmtIns(ins, def, some.operands) + " ";
+                res += i + " " + fmtIns(ins, def, some.operands) + "\n";
                 i += some.offset + 1;
             } else {
                 continue;
@@ -88,7 +91,7 @@ public class Code {
         return res;
     }
 
-    static String fmtIns(byte[] ins, Definition def, int[] operands) {
+    static String fmtIns(Vector<Byte> ins, Definition def, int[] operands) {
         int operandCount = def.operandWidth.length;
         if (operands.length != operandCount) {
             return "ERROR: Operand Count does not match";
