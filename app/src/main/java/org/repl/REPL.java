@@ -55,7 +55,7 @@ public class REPL {
         cmp.compile(program);
         VM machine = new VM(cmp.bytecode());
         machine.run();
-        Object_T stackTop = machine.stackTop();
+        Object_T stackTop = machine.lastPoppedStackElement();
         System.out.println(stackTop.inspect());
 
       }

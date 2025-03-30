@@ -6,6 +6,7 @@ import org.code.*;
 import org.code.utils.*;
 import org.compiler.*;
 import org.typesystem.*;
+import org.typesystem.utils.*;
 
 /**
  * VM
@@ -47,18 +48,112 @@ public class VM {
                         return;
                     }
                     break;
+                case OpCodes.OpTrue:
+                    this.push(Constants.TRUE);
+                    break;
+                case OpCodes.OpFalse:
+                    this.push(Constants.FALSE);
+                    break;
                 case OpCodes.OpAdd:
-                    Object_T right = this.pop();
-                    Object_T left = this.pop();
-                    int leftVal = ((Integer_T) left).getValue();
-                    int rightVal = ((Integer_T) right).getValue();
-
-                    int result = leftVal + rightVal;
-                    this.push(new Integer_T(result));
+                case OpCodes.OpSub:
+                case OpCodes.OpMul:
+                case OpCodes.OpDiv:
+                case OpCodes.OpPow:
+                    this.executeBinaryOperation(op);
+                    break;
+                case OpCodes.OpEqual:
+                case OpCodes.OpNotEqual:
+                case OpCodes.OpGreaterThan:
+                case OpCodes.OpGreaterThanEqualTo:
+                    this.executeComparision(op);
+                    break;
+                case OpCodes.OpPop:
+                    this.pop();
                     break;
 
             }
         }
+    }
+
+    void executeBinaryOperation(byte op) {
+        Object_T right = this.pop();
+        Object_T left = this.pop();
+        if (left instanceof Integer_T && right instanceof Integer_T) {
+            this.executeBinaryIntegerOperation(op, (Integer_T) left, (Integer_T) right);
+        }
+    }
+
+    void executeBinaryIntegerOperation(byte op, Integer_T left, Integer_T right) {
+        int leftVal = left.getValue();
+        int rightVal = right.getValue();
+        switch (op) {
+            case OpCodes.OpAdd:
+                this.push(new Integer_T(leftVal + rightVal));
+                break;
+            case OpCodes.OpSub:
+                this.push(new Integer_T(leftVal - rightVal));
+                break;
+            case OpCodes.OpMul:
+                this.push(new Integer_T(leftVal * rightVal));
+                break;
+            case OpCodes.OpDiv:
+                this.push(new Integer_T(leftVal / rightVal));
+                break;
+            case OpCodes.OpPow:
+                this.push(new Integer_T((int) Math.pow(leftVal, rightVal)));
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    void executeComparision(byte op) {
+        Object_T right = this.pop();
+        Object_T left = this.pop();
+        if (left instanceof Integer_T && right instanceof Integer_T) {
+            this.executeIntegerComparision(op, (Integer_T) left, (Integer_T) right);
+            return;
+        }
+        switch (op) {
+            case OpCodes.OpEqual:
+                this.push(this.nativeBoolToBooleanObject(left == right));
+                break;
+            case OpCodes.OpNotEqual:
+                this.push(this.nativeBoolToBooleanObject(left != right));
+                break;
+            default:
+                break;
+
+        }
+    }
+
+    void executeIntegerComparision(byte op, Integer_T left, Integer_T right) {
+        int leftVal = left.getValue();
+        int rightVal = right.getValue();
+        System.out.println("Left Value : " + leftVal);
+        System.out.println("Right Value : " + rightVal);
+        switch (op) {
+            case OpCodes.OpEqual:
+                this.push(this.nativeBoolToBooleanObject(leftVal == rightVal));
+                break;
+            case OpCodes.OpNotEqual:
+                this.push(this.nativeBoolToBooleanObject(leftVal != rightVal));
+                break;
+            case OpCodes.OpGreaterThan:
+                this.push(this.nativeBoolToBooleanObject(leftVal > rightVal));
+                break;
+            case OpCodes.OpGreaterThanEqualTo:
+                this.push(this.nativeBoolToBooleanObject(leftVal >= rightVal));
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    Boolean_T nativeBoolToBooleanObject(boolean input) {
+        return input ? Constants.TRUE : Constants.FALSE;
     }
 
     public int push(Object_T o) {
@@ -74,5 +169,9 @@ public class VM {
         Object_T o = this.stack.get(this.sp - 1);
         this.sp--;
         return o;
+    }
+
+    public Object_T lastPoppedStackElement() {
+        return this.stack.get(this.sp);
     }
 }

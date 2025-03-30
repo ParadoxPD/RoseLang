@@ -40,22 +40,66 @@ public class Compiler {
                 break;
             case ExpressionStatement es:
                 this.compile(es.getExpression());
+                this.emit(OpCodes.OpPop);
                 break;
             case InfixExpression ie:
+                System.out.println("Operator :" + ie.getOperator());
+
+                if (ie.getOperator().equals("<") || ie.getOperator().equals("<=")) {
+                    this.compile(ie.getRight());
+                    this.compile(ie.getLeft());
+                    System.out.println("Ahhhhhhhh");
+                    if (ie.getOperator().equals("<"))
+                        this.emit(OpCodes.OpGreaterThan);
+                    else
+                        this.emit(OpCodes.OpGreaterThanEqualTo);
+                    return;
+                }
                 this.compile(ie.getLeft());
                 this.compile(ie.getRight());
 
                 switch (ie.getOperator()) {
                     case "+":
                         this.emit(OpCodes.OpAdd);
+                        break;
+                    case "-":
+                        this.emit(OpCodes.OpSub);
+                        break;
+                    case "*":
+                        this.emit(OpCodes.OpMul);
+                        break;
+                    case "/":
+                        this.emit(OpCodes.OpDiv);
+                        break;
+                    case "^":
+                        this.emit(OpCodes.OpPow);
+                        break;
+                    case ">":
+                        this.emit(OpCodes.OpGreaterThan);
+                        break;
+                    case ">=":
+                        this.emit(OpCodes.OpGreaterThanEqualTo);
+                        break;
+                    case "==":
+                        this.emit(OpCodes.OpEqual);
+                        break;
+                    case "!=":
+                        this.emit(OpCodes.OpNotEqual);
+                        break;
                     default:
                         break;
                 }
                 break;
-
             case IntegerLiteral il:
                 Integer_T integer = new Integer_T(il.getValue());
                 this.emit(OpCodes.OpConstant, this.addConstant(integer));
+                break;
+
+            case BooleanLiteral bl:
+                if (bl.getValue())
+                    this.emit(OpCodes.OpTrue);
+                else
+                    this.emit(OpCodes.OpFalse);
                 break;
 
             default:

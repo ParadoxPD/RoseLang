@@ -14,7 +14,22 @@ public class Code {
 
     public Code() {
         this.definitions.put(OpCodes.OpConstant, new Definition("OpConstant", new int[] { 2 }));
+
+        this.definitions.put(OpCodes.OpTrue, new Definition("OpTrue", new int[] {}));
+        this.definitions.put(OpCodes.OpFalse, new Definition("OpFalse", new int[] {}));
+
         this.definitions.put(OpCodes.OpAdd, new Definition("OpAdd", new int[] {}));
+        this.definitions.put(OpCodes.OpSub, new Definition("OpSub", new int[] {}));
+        this.definitions.put(OpCodes.OpMul, new Definition("OpMul", new int[] {}));
+        this.definitions.put(OpCodes.OpDiv, new Definition("OpDiv", new int[] {}));
+        this.definitions.put(OpCodes.OpPow, new Definition("OpPow", new int[] {}));
+
+        this.definitions.put(OpCodes.OpEqual, new Definition("OpEqual", new int[] {}));
+        this.definitions.put(OpCodes.OpNotEqual, new Definition("OpNotEqual", new int[] {}));
+        this.definitions.put(OpCodes.OpGreaterThan, new Definition("OpGreaterThan", new int[] {}));
+        this.definitions.put(OpCodes.OpGreaterThanEqualTo, new Definition("OpGreaterThanEqualTo", new int[] {}));
+
+        this.definitions.put(OpCodes.OpPop, new Definition("OpPop", new int[] {}));
     }
 
     Definition lookUp(byte op) {
