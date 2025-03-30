@@ -1,4 +1,4 @@
-package org.bytecode;
+package org.compiler;
 
 import java.util.Vector;
 
@@ -12,4 +12,13 @@ public class ByteCode {
         this.instructions = instructions;
         this.constants = constants;
     }
+
+    public Vector<Byte> getInstructions() {
+        return this.instructions;
+    }
+
+    public Vector<Object_T> getConstants() {
+        return this.constants;
+    }
+
 }

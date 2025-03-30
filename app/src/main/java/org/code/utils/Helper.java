@@ -1,4 +1,4 @@
-package org.bytecode.utils;
+package org.code.utils;
 
 import java.util.Vector;
 

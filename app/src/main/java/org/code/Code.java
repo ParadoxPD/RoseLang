@@ -1,19 +1,20 @@
-package org.bytecode;
+package org.code;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
-import org.bytecode.utils.Binary;
-import org.bytecode.utils.Definition;
-import org.bytecode.utils.Helper;
-import org.bytecode.utils.OpCodes;
+import org.code.utils.Binary;
+import org.code.utils.Definition;
+import org.code.utils.Helper;
+import org.code.utils.OpCodes;
 
 public class Code {
     Map<Byte, Definition> definitions = new HashMap<Byte, Definition>();
 
     public Code() {
         this.definitions.put(OpCodes.OpConstant, new Definition("OpConstant", new int[] { 2 }));
+        this.definitions.put(OpCodes.OpAdd, new Definition("OpAdd", new int[] {}));
     }
 
     Definition lookUp(byte op) {
@@ -56,7 +57,7 @@ public class Code {
         return instruction;
     }
 
-    static Something readOperands(Definition def, Vector<Byte> ins, int offset1) {
+    public static Something readOperands(Definition def, Vector<Byte> ins, int offset1) {
         int[] operands = new int[def.operandWidth.length];
         int offset = 0;
 
@@ -71,7 +72,7 @@ public class Code {
         return new Something(operands, offset);
     }
 
-    static int readUint16(byte[] ins, int offset) {
+    public static int readUint16(byte[] ins, int offset) {
         return Binary.readUint16(ins, offset);
     }
 
@@ -97,6 +98,8 @@ public class Code {
             return "ERROR: Operand Count does not match";
         }
         switch (operandCount) {
+            case 0:
+                return def.name;
             case 1:
                 return def.name + " " + operands[0];
         }

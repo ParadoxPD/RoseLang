@@ -7,8 +7,9 @@ import org.parser.expressions.*;
 import org.parser.literals.*;
 import org.error.*;
 import org.typesystem.*;
-import org.bytecode.utils.*;
-import org.bytecode.*;
+import org.vm.VM;
+import org.code.utils.*;
+import org.code.*;
 import org.lexer.*;
 import org.debugger.*;
 import java.util.*;
@@ -43,6 +44,13 @@ public class Compiler {
             case InfixExpression ie:
                 this.compile(ie.getLeft());
                 this.compile(ie.getRight());
+
+                switch (ie.getOperator()) {
+                    case "+":
+                        this.emit(OpCodes.OpAdd);
+                    default:
+                        break;
+                }
                 break;
 
             case IntegerLiteral il:
@@ -98,6 +106,10 @@ public class Compiler {
         Compiler cmp = new Compiler();
         cmp.compile(cmp.parse("1+2"));
         System.out.println(new Code().toString(cmp.instructions));
+        VM vm = new VM(cmp.bytecode());
+        vm.run();
+        System.out.println(vm.stackTop().inspect());
+
     }
 
 }
