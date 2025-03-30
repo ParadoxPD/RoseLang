@@ -19,7 +19,7 @@ public class Compiler {
     Vector<Byte> instructions;
     Vector<Object_T> constants;
 
-    Compiler() {
+    public Compiler() {
         this.instructions = new Vector<Byte>();
         this.constants = new Vector<Object_T>();
 
@@ -30,7 +30,7 @@ public class Compiler {
         return this.constants.size() - 1;
     }
 
-    void compile(Node node) {
+    public void compile(Node node) {
         switch (node) {
             case Program prg:
                 for (Statement s : prg.getStatements()) {
@@ -78,7 +78,7 @@ public class Compiler {
 
     }
 
-    ByteCode bytecode() {
+    public ByteCode bytecode() {
         return new ByteCode(this.instructions, this.constants);
     }
 
