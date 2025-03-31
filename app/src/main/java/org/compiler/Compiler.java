@@ -19,9 +19,14 @@ public class Compiler {
     Vector<Byte> instructions;
     Vector<Object_T> constants;
 
+    EmittedInstruction lastInstruction;
+    EmittedInstruction previousInstruction;
+
     public Compiler() {
         this.instructions = new Vector<Byte>();
         this.constants = new Vector<Object_T>();
+        lastInstruction = new EmittedInstruction();
+        previousInstruction = new EmittedInstruction();
 
     }
 
@@ -32,6 +37,10 @@ public class Compiler {
 
     public void compile(Node node) {
         switch (node) {
+            // Program
+            // Statements
+            // Expressions
+            // Literals
             case Program prg:
                 for (Statement s : prg.getStatements()) {
                     this.compile(s);
@@ -41,6 +50,38 @@ public class Compiler {
             case ExpressionStatement es:
                 this.compile(es.getExpression());
                 this.emit(OpCodes.OpPop);
+                break;
+            case BlockStatement bs:
+                for (Statement s : bs.getStatements()) {
+                    this.compile(s);
+
+                }
+                break;
+            case IfExpression ie:
+                this.compile(ie.getCondition());
+                int jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
+                this.compile(ie.getConsequence());
+                if (this.lastInstructionIsPop()) {
+                    this.removeLastPop();
+                }
+                int afterConsequencePos = this.instructions.size();
+                this.changeOperand(jumpNotTruthyPos, afterConsequencePos);
+                if (ie.getAlternative() == null) {
+                    afterConsequencePos = this.instructions.size();
+                    this.changeOperand(jumpNotTruthyPos, afterConsequencePos);
+                } else {
+                    int jumpPos = this.emit(OpCodes.OpJump, 9999);
+                    afterConsequencePos = this.instructions.size();
+                    this.changeOperand(jumpNotTruthyPos, afterConsequencePos);
+
+                    this.compile(ie.getAlternative());
+
+                    if (this.lastInstructionIsPop()) {
+                        this.removeLastPop();
+                    }
+                    int afterAlternativePos = this.instructions.size();
+                    this.changeOperand(jumpPos, afterAlternativePos);
+                }
                 break;
             case InfixExpression ie:
                 System.out.println("Operator :" + ie.getOperator());
@@ -90,6 +131,20 @@ public class Compiler {
                         break;
                 }
                 break;
+            case PrefixExpression pe:
+                this.compile(pe.getRight());
+
+                switch (pe.getOperator()) {
+                    case "!":
+                        this.emit(OpCodes.OpBang);
+                        break;
+                    case "-":
+                        this.emit(OpCodes.OpMinus);
+                        break;
+                    default:
+                        break;
+                }
+                break;
             case IntegerLiteral il:
                 Integer_T integer = new Integer_T(il.getValue());
                 this.emit(OpCodes.OpConstant, this.addConstant(integer));
@@ -108,9 +163,20 @@ public class Compiler {
 
     }
 
+    boolean lastInstructionIsPop() {
+        return this.lastInstruction.opCode == OpCodes.OpPop;
+    }
+
+    void removeLastPop() {
+        this.instructions = Helper.slice(this.instructions, 0, this.lastInstruction.position);
+        this.lastInstruction = this.previousInstruction;
+    }
+
     int emit(byte op, int... operands) {
         byte[] ins = new Code().make(op, operands);
         int pos = this.addInstuctions(ins);
+
+        this.setLastInstruction(op, pos);
         return pos;
     }
 
@@ -120,6 +186,27 @@ public class Compiler {
             this.instructions.add(in);
         return pos;
 
+    }
+
+    void replaceInstruction(int pos, byte[] newInstruction) {
+        for (int i = 0; i < newInstruction.length; i++) {
+            this.instructions.set(pos + i, newInstruction[i]);
+        }
+    }
+
+    void changeOperand(int opPos, int operand) {
+        byte op = this.instructions.get(opPos);
+        byte[] newInstruction = new Code().make(op, operand);
+
+        this.replaceInstruction(opPos, newInstruction);
+    }
+
+    void setLastInstruction(byte op, int pos) {
+        EmittedInstruction previous = this.lastInstruction;
+        EmittedInstruction last = new EmittedInstruction(op, pos);
+
+        this.previousInstruction = previous;
+        this.lastInstruction = last;
     }
 
     public ByteCode bytecode() {
@@ -156,4 +243,19 @@ public class Compiler {
 
     }
 
+}
+
+class EmittedInstruction {
+    byte opCode;
+    int position;
+
+    EmittedInstruction() {
+        this.opCode = 0;
+        this.position = 0;
+    }
+
+    EmittedInstruction(byte op, int pos) {
+        this.opCode = op;
+        this.position = pos;
+    }
 }

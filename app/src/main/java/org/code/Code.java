@@ -29,7 +29,13 @@ public class Code {
         this.definitions.put(OpCodes.OpGreaterThan, new Definition("OpGreaterThan", new int[] {}));
         this.definitions.put(OpCodes.OpGreaterThanEqualTo, new Definition("OpGreaterThanEqualTo", new int[] {}));
 
+        this.definitions.put(OpCodes.OpMinus, new Definition("OpMinus", new int[] {}));
+        this.definitions.put(OpCodes.OpBang, new Definition("OpBang", new int[] {}));
+
         this.definitions.put(OpCodes.OpPop, new Definition("OpPop", new int[] {}));
+
+        this.definitions.put(OpCodes.OpJump, new Definition("OpJump", new int[] { 2 }));
+        this.definitions.put(OpCodes.OpJumpNotTruthy, new Definition("OpJumpNotTruthy", new int[] { 2 }));
     }
 
     Definition lookUp(byte op) {

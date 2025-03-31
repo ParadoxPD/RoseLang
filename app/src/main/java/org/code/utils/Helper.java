@@ -21,4 +21,12 @@ public class Helper {
         return outBytes;
 
     }
+
+    public static Vector<Byte> slice(Vector<Byte> list, int start, int end) {
+        Vector<Byte> res = new Vector<>();
+        for (int i = start; i < end; i++) {
+            res.add(list.get(i));
+        }
+        return res;
+    }
 }

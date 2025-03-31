@@ -17,5 +17,11 @@ public interface OpCodes {
     byte OpGreaterThan = 12;
     byte OpGreaterThanEqualTo = 13;
 
-    byte OpPop = 14;
+    byte OpMinus = 14;
+    byte OpBang = 15;
+
+    byte OpPop = 16;
+
+    byte OpJump = 17;
+    byte OpJumpNotTruthy = 18;
 }

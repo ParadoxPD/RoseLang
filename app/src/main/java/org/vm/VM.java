@@ -67,11 +67,64 @@ public class VM {
                 case OpCodes.OpGreaterThanEqualTo:
                     this.executeComparision(op);
                     break;
+                case OpCodes.OpBang:
+                    this.executeBangOperator();
+                    break;
+                case OpCodes.OpMinus:
+                    this.executeMinusOperation();
+                    break;
                 case OpCodes.OpPop:
                     this.pop();
                     break;
+                case OpCodes.OpJump:
+                    int pos = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    insPointer = pos - 1;
+                    break;
+                case OpCodes.OpJumpNotTruthy:
+                    pos = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    insPointer += 2;
+
+                    Object_T condition = this.pop();
+                    if (!this.isTruth(condition)) {
+                        insPointer = pos - 1;
+                    }
+                    break;
+                default:
+                    break;
 
             }
+        }
+    }
+
+    boolean isTruth(Object_T condition) {
+        if (condition instanceof Boolean_T) {
+            return ((Boolean_T) condition).getValue();
+        } else {
+            // NOTE: IF not boolean , should it be truthy ? If yes then why?
+            return false;
+        }
+    }
+
+    void executeMinusOperation() {
+        Object_T operand = this.pop();
+        if (operand instanceof Integer_T) {
+            this.push(new Integer_T(-((Integer_T) operand).getValue()));
+        }
+    }
+
+    void executeBangOperator() {
+        Object_T operand = this.pop();
+        switch (operand) {
+            case Boolean_T bool:
+                this.push(!bool.getValue() ? Constants.TRUE : Constants.FALSE);
+                break;
+            case Null_T obj:
+                this.push(Constants.TRUE);
+                break;
+            default:
+                this.push(Constants.FALSE);
+                break;
+
         }
     }
 
