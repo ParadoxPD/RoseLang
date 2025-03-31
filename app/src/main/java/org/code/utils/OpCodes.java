@@ -6,8 +6,10 @@ public interface OpCodes {
     byte OpTrue = 2;
     byte OpFalse = 3;
 
-    byte OpAdd = 4;
-    byte OpSub = 5;
+    byte OpNull = 4;
+
+    byte OpAdd = 5;
+    byte OpSub = 6;
     byte OpMul = 7;
     byte OpDiv = 8;
     byte OpPow = 9;

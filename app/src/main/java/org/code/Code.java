@@ -18,6 +18,8 @@ public class Code {
         this.definitions.put(OpCodes.OpTrue, new Definition("OpTrue", new int[] {}));
         this.definitions.put(OpCodes.OpFalse, new Definition("OpFalse", new int[] {}));
 
+        this.definitions.put(OpCodes.OpNull, new Definition("OpNull", new int[] {}));
+
         this.definitions.put(OpCodes.OpAdd, new Definition("OpAdd", new int[] {}));
         this.definitions.put(OpCodes.OpSub, new Definition("OpSub", new int[] {}));
         this.definitions.put(OpCodes.OpMul, new Definition("OpMul", new int[] {}));

@@ -1,5 +1,6 @@
 package org.repl;
 
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Vector;
 import org.debugger.DebugLevel;
@@ -17,12 +18,12 @@ public class REPL {
 
   public static void main(String[] args) {
 
+  }
+
+  public static void run(Map<String, String> parsedArgs) {
     Scanner sc = new Scanner(System.in);
-    boolean debug = true;
-    if (args.length > 0) {
-      System.out.println(args[0].equals("true"));
-      debug = args[0].equals("true");
-    }
+    boolean debug = Boolean.parseBoolean(parsedArgs.get("--debug"));
+    System.out.println(debug);
     Debugger debugger = new Debugger(debug ? DebugLevel.HIGH : DebugLevel.NONE);
     String prompt = ">> ";
     System.out.println(
@@ -30,7 +31,7 @@ public class REPL {
 
     Environment globalEnv = new Environment();
     Evaluator evaluator = new Evaluator();
-    while (true && globalEnv != null) {
+    while (true) {
       System.out.print(prompt);
       String input = sc.nextLine();
       if (input == null || input.equals("")) {
@@ -58,11 +59,13 @@ public class REPL {
         Object_T stackTop = machine.lastPoppedStackElement();
         System.out.println(stackTop.inspect());
 
-      }
+      } else {
 
-      for (ParserError er : errors) {
-        er.printError();
+        for (ParserError er : errors) {
+          er.printError();
+        }
       }
     }
+
   }
 }

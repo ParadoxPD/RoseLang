@@ -48,6 +48,9 @@ public class VM {
                         return;
                     }
                     break;
+                case OpCodes.OpNull:
+                    this.push(Constants.NULL);
+                    break;
                 case OpCodes.OpTrue:
                     this.push(Constants.TRUE);
                     break;

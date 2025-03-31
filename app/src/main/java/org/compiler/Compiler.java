@@ -58,30 +58,34 @@ public class Compiler {
                 }
                 break;
             case IfExpression ie:
+
                 this.compile(ie.getCondition());
+
                 int jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
                 this.compile(ie.getConsequence());
+
                 if (this.lastInstructionIsPop()) {
                     this.removeLastPop();
                 }
+
+                int jumpPos = this.emit(OpCodes.OpJump, 9999);
                 int afterConsequencePos = this.instructions.size();
                 this.changeOperand(jumpNotTruthyPos, afterConsequencePos);
+
                 if (ie.getAlternative() == null) {
-                    afterConsequencePos = this.instructions.size();
-                    this.changeOperand(jumpNotTruthyPos, afterConsequencePos);
+                    this.emit(OpCodes.OpNull);
                 } else {
-                    int jumpPos = this.emit(OpCodes.OpJump, 9999);
-                    afterConsequencePos = this.instructions.size();
-                    this.changeOperand(jumpNotTruthyPos, afterConsequencePos);
 
                     this.compile(ie.getAlternative());
 
                     if (this.lastInstructionIsPop()) {
                         this.removeLastPop();
                     }
-                    int afterAlternativePos = this.instructions.size();
-                    this.changeOperand(jumpPos, afterAlternativePos);
                 }
+
+                int afterAlternativePos = this.instructions.size();
+                this.changeOperand(jumpPos, afterAlternativePos);
+
                 break;
             case InfixExpression ie:
                 System.out.println("Operator :" + ie.getOperator());
