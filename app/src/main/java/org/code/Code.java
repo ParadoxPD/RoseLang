@@ -10,38 +10,12 @@ import org.code.utils.Helper;
 import org.code.utils.OpCodes;
 
 public class Code {
-    Map<Byte, Definition> definitions = new HashMap<Byte, Definition>();
 
     public Code() {
-        this.definitions.put(OpCodes.OpConstant, new Definition("OpConstant", new int[] { 2 }));
-
-        this.definitions.put(OpCodes.OpTrue, new Definition("OpTrue", new int[] {}));
-        this.definitions.put(OpCodes.OpFalse, new Definition("OpFalse", new int[] {}));
-
-        this.definitions.put(OpCodes.OpNull, new Definition("OpNull", new int[] {}));
-
-        this.definitions.put(OpCodes.OpAdd, new Definition("OpAdd", new int[] {}));
-        this.definitions.put(OpCodes.OpSub, new Definition("OpSub", new int[] {}));
-        this.definitions.put(OpCodes.OpMul, new Definition("OpMul", new int[] {}));
-        this.definitions.put(OpCodes.OpDiv, new Definition("OpDiv", new int[] {}));
-        this.definitions.put(OpCodes.OpPow, new Definition("OpPow", new int[] {}));
-
-        this.definitions.put(OpCodes.OpEqual, new Definition("OpEqual", new int[] {}));
-        this.definitions.put(OpCodes.OpNotEqual, new Definition("OpNotEqual", new int[] {}));
-        this.definitions.put(OpCodes.OpGreaterThan, new Definition("OpGreaterThan", new int[] {}));
-        this.definitions.put(OpCodes.OpGreaterThanEqualTo, new Definition("OpGreaterThanEqualTo", new int[] {}));
-
-        this.definitions.put(OpCodes.OpMinus, new Definition("OpMinus", new int[] {}));
-        this.definitions.put(OpCodes.OpBang, new Definition("OpBang", new int[] {}));
-
-        this.definitions.put(OpCodes.OpPop, new Definition("OpPop", new int[] {}));
-
-        this.definitions.put(OpCodes.OpJump, new Definition("OpJump", new int[] { 2 }));
-        this.definitions.put(OpCodes.OpJumpNotTruthy, new Definition("OpJumpNotTruthy", new int[] { 2 }));
     }
 
     Definition lookUp(byte op) {
-        Definition def = definitions.get(op);
+        Definition def = OpCodes.Definitions.get(op);
         if (def == null) {
             System.out.println("OpCode " + op + " undefined");
         }
@@ -51,7 +25,7 @@ public class Code {
     }
 
     public byte[] make(byte op, int... operands) {
-        Definition def = definitions.get(op);
+        Definition def = OpCodes.Definitions.get(op);
         if (def == null) {
             return new byte[] {};
         }

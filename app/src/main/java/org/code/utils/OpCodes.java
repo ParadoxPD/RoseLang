@@ -1,5 +1,7 @@
 package org.code.utils;
 
+import java.util.*;
+
 public interface OpCodes {
     byte OpConstant = 1;
 
@@ -26,4 +28,41 @@ public interface OpCodes {
 
     byte OpJump = 17;
     byte OpJumpNotTruthy = 18;
+
+    byte OpGetGlobal = 19;
+    byte OpSetGlobal = 20;
+
+    Map<Byte, Definition> Definitions = Map.ofEntries(
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpConstant,
+                    new Definition("OpConstant", new int[] { 2 })),
+
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpTrue, new Definition("OpTrue", new int[] {})),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpFalse, new Definition("OpFalse", new int[] {})),
+
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpNull, new Definition("OpNull", new int[] {})),
+
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpAdd, new Definition("OpAdd", new int[] {})),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpSub, new Definition("OpSub", new int[] {})),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpMul, new Definition("OpMul", new int[] {})),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpDiv, new Definition("OpDiv", new int[] {})),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpPow, new Definition("OpPow", new int[] {})),
+
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpEqual, new Definition("OpEqual", new int[] {})),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpNotEqual,
+                    new Definition("OpNotEqual", new int[] {})),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpGreaterThan,
+                    new Definition("OpGreaterThan", new int[] {})),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpGreaterThanEqualTo,
+                    new Definition("OpGreaterThanEqualTo", new int[] {})),
+
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpMinus, new Definition("OpMinus", new int[] {})),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpBang, new Definition("OpBang", new int[] {})),
+
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpPop, new Definition("OpPop", new int[] {})),
+
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpJump, new Definition("OpJump", new int[] { 2 })),
+            new AbstractMap.SimpleEntry<Byte, Definition>(OpCodes.OpJumpNotTruthy,
+                    new Definition("OpJumpNotTruthy", new int[] { 2 }))
+
+    );
 }
