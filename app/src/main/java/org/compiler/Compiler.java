@@ -22,11 +22,21 @@ public class Compiler {
     EmittedInstruction lastInstruction;
     EmittedInstruction previousInstruction;
 
+    SymbolTable symbolTable;
+
     public Compiler() {
         this.instructions = new Vector<Byte>();
         this.constants = new Vector<Object_T>();
-        lastInstruction = new EmittedInstruction();
-        previousInstruction = new EmittedInstruction();
+        this.lastInstruction = new EmittedInstruction();
+        this.previousInstruction = new EmittedInstruction();
+        this.symbolTable = new SymbolTable();
+
+    }
+
+    public Compiler(SymbolTable st, Vector<Object_T> constants) {
+        this();
+        this.symbolTable = st;
+        this.constants = constants;
 
     }
 
@@ -44,7 +54,6 @@ public class Compiler {
             case Program prg:
                 for (Statement s : prg.getStatements()) {
                     this.compile(s);
-
                 }
                 break;
             case ExpressionStatement es:
@@ -54,11 +63,22 @@ public class Compiler {
             case BlockStatement bs:
                 for (Statement s : bs.getStatements()) {
                     this.compile(s);
-
                 }
                 break;
+            case LetStatement ls:
+                this.compile(ls.getValue());
+                Symbol symbol = this.symbolTable.define(ls.getName().getValue());
+                this.emit(OpCodes.OpSetGlobal, symbol.index);
+                break;
+            case AssignmentStatement as:
+                this.compile(as.getExpression());
+                symbol = this.symbolTable.resolve(as.getName().getValue());
+                if (symbol == null) {
+                    return;
+                }
+                this.emit(OpCodes.OpSetGlobal, symbol.index);
+                break;
             case IfExpression ie:
-
                 this.compile(ie.getCondition());
 
                 int jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
@@ -148,6 +168,13 @@ public class Compiler {
                     default:
                         break;
                 }
+                break;
+            case Identifier id:
+                symbol = this.symbolTable.resolve(id.getValue());
+                if (symbol == null) {
+                    return;
+                }
+                this.emit(OpCodes.OpGetGlobal, symbol.index);
                 break;
             case IntegerLiteral il:
                 Integer_T integer = new Integer_T(il.getValue());

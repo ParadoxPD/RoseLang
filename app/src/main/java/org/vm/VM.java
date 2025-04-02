@@ -13,12 +13,14 @@ import org.typesystem.utils.*;
  */
 public class VM {
 
-    final static int StackSize = 2048;
+    public final static int StackSize = 2048;
+    public final static int GlobalsSize = 65536;
 
     Vector<Object_T> constants;
     Vector<Byte> instructions;
 
     Vector<Object_T> stack;
+    Vector<Object_T> globals;
     int sp;
 
     public VM(ByteCode bytecode) {
@@ -26,7 +28,13 @@ public class VM {
         this.constants = bytecode.getConstants();
 
         this.stack = new Vector<Object_T>(StackSize);
+        this.globals = new Vector<Object_T>(GlobalsSize);
         this.sp = 0;
+    }
+
+    public VM(ByteCode bytecode, Vector<Object_T> globals) {
+        this(bytecode);
+        this.globals = globals;
     }
 
     public Object_T stackTop() {
@@ -92,6 +100,18 @@ public class VM {
                         insPointer = pos - 1;
                     }
                     break;
+                case OpCodes.OpSetGlobal:
+                    int globalIndex = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    insPointer += 2;
+                    if (this.globals.size() <= globalIndex)
+                        this.globals.add(globalIndex, this.pop());
+                    else
+                        this.globals.set(globalIndex, this.pop());
+                    break;
+                case OpCodes.OpGetGlobal:
+                    globalIndex = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    insPointer += 2;
+                    this.push(this.globals.get(globalIndex));
                 default:
                     break;
 

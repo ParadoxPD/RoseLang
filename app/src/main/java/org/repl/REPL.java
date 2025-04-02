@@ -21,12 +21,14 @@ public class REPL {
     boolean debug = Boolean.parseBoolean(parsedArgs.get("--debug"));
     System.out.println(debug);
     Debugger debugger = new Debugger(debug ? DebugLevel.HIGH : DebugLevel.NONE);
+    Vector<Object_T> constants = new Vector<Object_T>();
+    Vector<Object_T> globals = new Vector<Object_T>(VM.GlobalsSize);
+    SymbolTable symbolTable = new SymbolTable();
+
     String prompt = ">> ";
     System.out.println(
         "Welcome to JorkLang where you can jork the lang...\nEnter the commands below");
 
-    Environment globalEnv = new Environment();
-    Evaluator evaluator = new Evaluator();
     while (true) {
       System.out.print(prompt);
       String input = sc.nextLine();
@@ -48,9 +50,10 @@ public class REPL {
       Program program = ps.getProgram();
       Vector<ParserError> errors = ps.getErrors();
       if (errors.size() == 0) {
-        Compiler cmp = new Compiler();
+
+        Compiler cmp = new Compiler(symbolTable, constants);
         cmp.compile(program);
-        VM machine = new VM(cmp.bytecode());
+        VM machine = new VM(cmp.bytecode(), globals);
         machine.run();
         Object_T stackTop = machine.lastPoppedStackElement();
         System.out.println(stackTop.inspect());
