@@ -2,7 +2,7 @@ package org.typesystem;
 
 import org.typesystem.utils.*;
 
-public class Boolean_T implements Object_T, Hashable {
+public class Boolean_T implements Object_T, Primitive, Hashable {
 	boolean value;
 
 	public Boolean_T(boolean value) {

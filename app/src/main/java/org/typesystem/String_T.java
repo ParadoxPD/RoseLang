@@ -2,7 +2,7 @@ package org.typesystem;
 
 import org.typesystem.utils.*;
 
-public class String_T implements Object_T, Hashable {
+public class String_T implements Object_T, Primitive, Hashable {
 	String value;
 
 	public String_T(String value) {

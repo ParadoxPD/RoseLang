@@ -171,6 +171,10 @@ public class VM {
         if (operand instanceof Integer_T) {
             return this.push(new Integer_T(-((Integer_T) operand).getValue()));
         }
+        if (operand instanceof Float_T) {
+            return this.push(new Float_T(-((Float_T) operand).getValue()));
+        }
+
         return new VMError("", "Unsupported type : " + operand.type());
     }
 
@@ -190,10 +194,52 @@ public class VM {
     VMError executeBinaryOperation(byte op) {
         Object_T right = this.pop();
         Object_T left = this.pop();
-        if (left instanceof Integer_T && right instanceof Integer_T) {
-            return this.executeBinaryIntegerOperation(op, (Integer_T) left, (Integer_T) right);
+        if (left instanceof Primitive && right instanceof Primitive) {
+            return this.executePrimitiveBinaryOperation(op, left, right);
         }
         return new VMError("", "Unsupported type : " + right.type() + " " + left.type());
+    }
+
+    VMError executePrimitiveBinaryOperation(byte op, Object_T left, Object_T right) {
+        switch (left) {
+            case Integer_T it when right instanceof Integer_T:
+                return this.executeBinaryIntegerOperation(op, it, (Integer_T) right);
+            case Integer_T it when right instanceof Boolean_T:
+                return this.executeBinaryIntegerOperation(op, it,
+                        new Integer_T(((Boolean_T) right).getValue() ? 1 : 0));
+            case Boolean_T it when right instanceof Integer_T:
+                return this.executeBinaryIntegerOperation(op, new Integer_T(it.getValue() ? 1 : 0), (Integer_T) right);
+
+            case Float_T it when right instanceof Float_T:
+                return this.executeBinaryFloatOperation(op, it, (Float_T) right);
+            case Float_T it when right instanceof Integer_T:
+                return this.executeBinaryFloatOperation(op, it, new Float_T(((Integer_T) right).getValue()));
+            case Float_T it when right instanceof Boolean_T:
+                return this.executeBinaryFloatOperation(op, it, new Float_T(((Boolean_T) right).getValue() ? 1 : 0));
+            case Integer_T it when right instanceof Float_T:
+                return this.executeBinaryFloatOperation(op, new Float_T(it.getValue()), (Float_T) right);
+            case Boolean_T it when right instanceof Float_T:
+                return this.executeBinaryFloatOperation(op, new Float_T(it.getValue() ? 1 : 0), (Float_T) right);
+
+            case String_T it when right instanceof String_T:
+                return this.executeBinaryStringOperation(op, it, (String_T) right);
+            case String_T it when right instanceof Integer_T:
+                return this.executeBinaryStringOperation(op, it, new String_T(((Integer_T) right).getValue() + ""));
+            case String_T it when right instanceof Float_T:
+                return this.executeBinaryStringOperation(op, it, new String_T(((Float_T) right).getValue() + ""));
+            case String_T it when right instanceof Boolean_T:
+                return this.executeBinaryStringOperation(op, it, new String_T(((Boolean_T) right).getValue() + ""));
+            case Boolean_T it when right instanceof String_T:
+                return this.executeBinaryStringOperation(op, new String_T(it.getValue() + ""), (String_T) right);
+            case Float_T it when right instanceof String_T:
+                return this.executeBinaryStringOperation(op, new String_T(it.getValue() + ""), (String_T) right);
+            case Integer_T it when right instanceof String_T:
+                return this.executeBinaryStringOperation(op, new String_T(it.getValue() + ""), (String_T) right);
+
+            default:
+                return new VMError("",
+                        "Operation : " + op + " not permitted for type : " + left.type() + " " + right.type());
+        }
     }
 
     VMError executeBinaryIntegerOperation(byte op, Integer_T left, Integer_T right) {
@@ -216,26 +262,90 @@ public class VM {
 
     }
 
+    VMError executeBinaryFloatOperation(byte op, Float_T left, Float_T right) {
+        float leftVal = left.getValue();
+        float rightVal = right.getValue();
+        switch (op) {
+            case OpCodes.OpAdd:
+                return this.push(new Float_T(leftVal + rightVal));
+            case OpCodes.OpSub:
+                return this.push(new Float_T(leftVal - rightVal));
+            case OpCodes.OpMul:
+                return this.push(new Float_T(leftVal * rightVal));
+            case OpCodes.OpDiv:
+                return this.push(new Float_T(leftVal / rightVal));
+            case OpCodes.OpPow:
+                return this.push(new Float_T((int) Math.pow(leftVal, rightVal)));
+            default:
+                return new VMError("", "Unsupported Operation : " + op);
+        }
+
+    }
+
+    VMError executeBinaryStringOperation(byte op, String_T left, String_T right) {
+        String leftVal = left.getValue();
+        String rightVal = right.getValue();
+        switch (op) {
+            case OpCodes.OpAdd:
+                return this.push(new String_T(leftVal + rightVal));
+
+            default:
+                return new VMError("", "Unsupported Operation : " + op);
+        }
+
+    }
+
     VMError executeComparision(byte op) {
         Object_T right = this.pop();
         Object_T left = this.pop();
-        if (left instanceof Integer_T && right instanceof Integer_T) {
-            return this.executeIntegerComparision(op, (Integer_T) left, (Integer_T) right);
-        }
-        switch (op) {
-            case OpCodes.OpEqual:
-                return this.push(this.nativeBoolToBooleanObject(left == right));
-            case OpCodes.OpNotEqual:
-                return this.push(this.nativeBoolToBooleanObject(left != right));
-            default:
-                return new VMError("", "Unsupported operator : " + op);
+        switch (left) {
+            case Integer_T it when right instanceof Integer_T:
+                return this.executeIntegerComparision(op, it, (Integer_T) right);
 
+            case Float_T it when right instanceof Float_T:
+                return this.executeFloatComparision(op, it, (Float_T) right);
+            case Float_T it when right instanceof Integer_T:
+                return this.executeFloatComparision(op, it, new Float_T(((Integer_T) right).getValue()));
+            case Integer_T it when right instanceof Float_T:
+                return this.executeFloatComparision(op, new Float_T(it.getValue()), (Float_T) right);
+
+            case Boolean_T it when right instanceof Boolean_T:
+                switch (op) {
+                    case OpCodes.OpEqual:
+                        return this.push(this.nativeBoolToBooleanObject(left == right));
+                    case OpCodes.OpNotEqual:
+                        return this.push(this.nativeBoolToBooleanObject(left != right));
+                    default:
+                        return new VMError("", "Unsupported operator : " + op);
+                }
+            default:
+                return new VMError("", "Unsupported type : " + left.type() + " " + right.type());
         }
     }
 
     VMError executeIntegerComparision(byte op, Integer_T left, Integer_T right) {
         int leftVal = left.getValue();
         int rightVal = right.getValue();
+        System.out.println("Left Value : " + leftVal);
+        System.out.println("Right Value : " + rightVal);
+        switch (op) {
+            case OpCodes.OpEqual:
+                return this.push(this.nativeBoolToBooleanObject(leftVal == rightVal));
+            case OpCodes.OpNotEqual:
+                return this.push(this.nativeBoolToBooleanObject(leftVal != rightVal));
+            case OpCodes.OpGreaterThan:
+                return this.push(this.nativeBoolToBooleanObject(leftVal > rightVal));
+            case OpCodes.OpGreaterThanEqualTo:
+                return this.push(this.nativeBoolToBooleanObject(leftVal >= rightVal));
+            default:
+                return new VMError("", "Unsupported operator : " + op);
+        }
+
+    }
+
+    VMError executeFloatComparision(byte op, Float_T left, Float_T right) {
+        float leftVal = left.getValue();
+        float rightVal = right.getValue();
         System.out.println("Left Value : " + leftVal);
         System.out.println("Right Value : " + rightVal);
         switch (op) {

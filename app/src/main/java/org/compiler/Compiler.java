@@ -221,12 +221,19 @@ public class Compiler {
                 Integer_T integer = new Integer_T(il.getValue());
                 this.emit(OpCodes.OpConstant, this.addConstant(integer));
                 return null;
-
+            case FloatLiteral fl:
+                Float_T f = new Float_T(fl.getValue());
+                this.emit(OpCodes.OpConstant, this.addConstant(f));
+                return null;
             case BooleanLiteral bl:
                 if (bl.getValue())
                     this.emit(OpCodes.OpTrue);
                 else
                     this.emit(OpCodes.OpFalse);
+                return null;
+            case StringLiteral s:
+                String_T str = new String_T(s.getValue());
+                this.emit(OpCodes.OpConstant, this.addConstant(str));
                 return null;
             default:
                 return new CompilerError("", "Unsupported Type : " + node.getClass());
@@ -244,7 +251,7 @@ public class Compiler {
     }
 
     int emit(byte op, int... operands) {
-        byte[] ins = new Code().make(op, operands);
+        byte[] ins = Code.make(op, operands);
         int pos = this.addInstuctions(ins);
 
         this.setLastInstruction(op, pos);
@@ -267,7 +274,7 @@ public class Compiler {
 
     void changeOperand(int opPos, int operand) {
         byte op = this.instructions.get(opPos);
-        byte[] newInstruction = new Code().make(op, operand);
+        byte[] newInstruction = Code.make(op, operand);
 
         this.replaceInstruction(opPos, newInstruction);
     }

@@ -2,7 +2,7 @@ package org.typesystem;
 
 import org.typesystem.utils.*;
 
-public class Float_T implements Object_T {
+public class Float_T implements Object_T, Primitive {
 	float value;
 
 	public Float_T(float value) {
