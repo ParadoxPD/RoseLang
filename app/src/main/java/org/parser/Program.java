@@ -37,4 +37,8 @@ public class Program implements Node {
   public Vector<Statement> getStatements() {
     return this.statements;
   }
+
+  public int size() {
+    return this.statements.size();
+  }
 }

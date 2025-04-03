@@ -37,7 +37,7 @@ public class Parser {
 
     public Parser(Vector<Token> tokens, Debugger debugger) {
         this.tokens = tokens;
-        this.currPos = 0;
+        this.currPos = -2;
         this.errors = new Vector<ParserError>();
         this.peekAvailable = true;
         this.program = null;
@@ -348,11 +348,11 @@ public class Parser {
     }
 
     void nextToken() {
-        if (!this.tokens.get(this.currPos).getType().equals(TokenList.EOF)) {
-            this.curr = this.peek;
-            this.peek = this.tokens.get(this.currPos++);
+        this.currPos++;
+        this.curr = this.peek;
+        if (!this.currTokenIs(TokenList.EOF)) {
+            this.peek = this.tokens.get(this.currPos + 1);
         } else {
-            this.curr = this.peek;
             this.peek = null;
             this.peekAvailable = false;
             this.debugger.log("Out of Tokens. If its not EOF then you might have fked up.");
@@ -361,7 +361,7 @@ public class Parser {
     }
 
     boolean currTokenIs(String type) {
-        return this.curr.getType().equals(type);
+        return this.curr != null && this.curr.getType().equals(type);
     }
 
     boolean peekTokenIs(String type) {
@@ -385,6 +385,7 @@ public class Parser {
     }
 
     Statement parseStatement() {
+        System.out.println("PARSING");
         // NOTE: Properly implement the '=' parsing (It has some off by one bug)
         switch (this.curr.getType()) {
             case TokenList.LET:
@@ -402,6 +403,7 @@ public class Parser {
     }
 
     Statement parseIdentifierStatement() {
+        System.out.println("PARSING");
         // NOTE: MAYBE BUGGY?????
         if (this.peekTokenIs(TokenList.ASSIGN)) {
             return this.parseAssignmentStatement();
@@ -417,10 +419,12 @@ public class Parser {
         this.nextToken();
         Expression exp = this.parseExpression(PrecedenceList.LOWEST);
         stm.setExpression(exp);
-        if (this.peekTokenIs(TokenList.SEMICOLON)) {
-            this.nextToken();
+        if (!this.peekTokenIs(TokenList.SEMICOLON)) {
+            errors.addElement(new ParserError("Missing Symbol", "; Missing"));
+            return null;
         }
 
+        this.nextToken();
         this.debugger.log(name.print("Identifier Name :"));
         this.debugger.log(exp.print("Assigned Expression : "));
         this.debugger.log(stm.print("Assignment Statement : "));
@@ -434,7 +438,7 @@ public class Parser {
             return null;
         }
 
-        nextToken();
+        this.nextToken();
         stm.setCondition(parseExpression(PrecedenceList.LOWEST));
 
         if (!this.expectPeek(TokenList.PAREN_CLOSE)) {
@@ -451,18 +455,21 @@ public class Parser {
     }
 
     ExpressionStatement parseExpressionStatement() {
+        System.out.println("PARSING");
         ExpressionStatement smt = new ExpressionStatement(this.curr, this.parseExpression(PrecedenceList.LOWEST));
 
-        if (this.peekTokenIs(TokenList.SEMICOLON)) {
-            this.nextToken();
+        if (!this.peekTokenIs(TokenList.SEMICOLON)) {
+            errors.addElement(new ParserError("Missing Symbol", "; Missing"));
+            return null;
         }
-
+        this.nextToken();
         this.debugger.log(smt.print("Exp Stm: "));
 
         return smt;
     }
 
     Expression parseExpression(int precedence) {
+        System.out.println("PARSING");
 
         if (!this.prefixParsers.containsKey(this.curr.getType())) {
             this.errors.addElement(
@@ -551,9 +558,12 @@ public class Parser {
 
         stm.setReturnValue(this.parseExpression(PrecedenceList.LOWEST));
 
-        if (this.peekTokenIs(TokenList.SEMICOLON)) {
-            this.nextToken();
+        if (!this.peekTokenIs(TokenList.SEMICOLON)) {
+            errors.addElement(new ParserError("Missing Symbol", "; Missing"));
+            return null;
         }
+
+        this.nextToken();
 
         this.debugger.log(stm.print("Return Statement : "));
         return stm;
@@ -604,6 +614,7 @@ public class Parser {
         // this.tokens.getLast().printToken();
 
         while (this.peek != null) {
+            System.out.println("PARSING");
             // this.curr.printToken();
             Statement stm = this.parseStatement();
             if (stm != null) {
@@ -612,15 +623,15 @@ public class Parser {
             this.nextToken();
         }
 
-        return this.program;
+        if (this.program.size() > 0)
+            return this.program;
+        else
+            this.errors.add(new ParserError("", "Unable to parse program"));
+        return null;
     }
 
     public void printProgram() {
         this.debugger.log(this.program.print("Parsed Program : "));
-    }
-
-    public Program getProgram() {
-        return this.program;
     }
 
     public Vector<ParserError> getErrors() {

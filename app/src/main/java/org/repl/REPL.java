@@ -54,14 +54,14 @@ public class REPL {
           Vector<Token> tokens = lx.getTokens();
           debugger.log("\n\n\n\n----------Parsing------------\n\n\n");
           Parser ps = new Parser(tokens, debugger);
-          ps.parseProgram();
+          Program program = ps.parseProgram();
           ps.printProgram();
-          Program program = ps.getProgram();
           Vector<ParserError> errors = ps.getErrors();
-          if (errors.size() == 0) {
+          if (errors.size() == 0 && program != null) {
 
             Compiler cmp = new Compiler(symbolTable, constants);
             CompilerError err = cmp.compile(program);
+            System.out.println("Compiled Instructions : ");
             cmp.printIns();
             if (err != null) {
               err.printError();
@@ -116,9 +116,8 @@ public class REPL {
       Vector<Token> tokens = lx.getTokens();
       debugger.log("\n\n\n\n----------Parsing------------\n\n\n");
       Parser ps = new Parser(tokens, debugger);
-      ps.parseProgram();
+      Program program = ps.parseProgram();
       ps.printProgram();
-      Program program = ps.getProgram();
       Vector<ParserError> errors = ps.getErrors();
       if (errors.size() == 0) {
         Object_T object = evaluator.eval(program, globalEnv);
