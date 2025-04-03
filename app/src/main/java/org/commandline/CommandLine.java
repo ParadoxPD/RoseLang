@@ -21,7 +21,6 @@ public class CommandLine {
             REPL.run(parsedArgs);
         } else if (parsedArgs.containsKey("--compile")) {
             System.out.println("Compile");
-            Compiler.main(args);
         } else if (parsedArgs.containsKey("--help")) {
             printHelp();
         } else if (parsedArgs.containsKey("--eval")) {

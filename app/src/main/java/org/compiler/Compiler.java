@@ -45,7 +45,8 @@ public class Compiler {
         return this.constants.size() - 1;
     }
 
-    public void compile(Node node) {
+    public CompilerError compile(Node node) {
+        CompilerError err = null;
         switch (node) {
             // Program
             // Statements
@@ -53,37 +54,59 @@ public class Compiler {
             // Literals
             case Program prg:
                 for (Statement s : prg.getStatements()) {
-                    this.compile(s);
+                    err = this.compile(s);
+                    if (err != null) {
+                        return err;
+                    }
                 }
-                break;
+                return null;
+
             case ExpressionStatement es:
-                this.compile(es.getExpression());
+                err = this.compile(es.getExpression());
+                if (err != null) {
+                    return err;
+                }
                 this.emit(OpCodes.OpPop);
-                break;
+                return null;
             case BlockStatement bs:
                 for (Statement s : bs.getStatements()) {
-                    this.compile(s);
+                    err = this.compile(s);
+                    if (err != null) {
+                        return err;
+                    }
                 }
-                break;
+                return null;
             case LetStatement ls:
-                this.compile(ls.getValue());
+                err = this.compile(ls.getValue());
+                if (err != null) {
+                    return err;
+                }
+
                 Symbol symbol = this.symbolTable.define(ls.getName().getValue());
                 this.emit(OpCodes.OpSetGlobal, symbol.index);
-                break;
+                return null;
             case AssignmentStatement as:
-                this.compile(as.getExpression());
+                err = this.compile(as.getExpression());
+                if (err != null) {
+                    return err;
+                }
                 symbol = this.symbolTable.resolve(as.getName().getValue());
                 if (symbol == null) {
-                    return;
+                    return new CompilerError("", "Variable does not exist : " + as.getName().getValue());
                 }
                 this.emit(OpCodes.OpSetGlobal, symbol.index);
-                break;
+                return err;
             case IfExpression ie:
-                this.compile(ie.getCondition());
+                err = this.compile(ie.getCondition());
 
+                if (err != null) {
+                    return err;
+                }
                 int jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
-                this.compile(ie.getConsequence());
-
+                err = this.compile(ie.getConsequence());
+                if (err != null) {
+                    return err;
+                }
                 if (this.lastInstructionIsPop()) {
                     this.removeLastPop();
                 }
@@ -96,8 +119,10 @@ public class Compiler {
                     this.emit(OpCodes.OpNull);
                 } else {
 
-                    this.compile(ie.getAlternative());
-
+                    err = this.compile(ie.getAlternative());
+                    if (err != null) {
+                        return err;
+                    }
                     if (this.lastInstructionIsPop()) {
                         this.removeLastPop();
                     }
@@ -105,23 +130,34 @@ public class Compiler {
 
                 int afterAlternativePos = this.instructions.size();
                 this.changeOperand(jumpPos, afterAlternativePos);
-
-                break;
+                return null;
             case InfixExpression ie:
-                System.out.println("Operator :" + ie.getOperator());
-
                 if (ie.getOperator().equals("<") || ie.getOperator().equals("<=")) {
-                    this.compile(ie.getRight());
-                    this.compile(ie.getLeft());
-                    System.out.println("Ahhhhhhhh");
+                    err = this.compile(ie.getRight());
+                    if (err != null) {
+                        return err;
+                    }
+
+                    err = this.compile(ie.getLeft());
+                    if (err != null) {
+                        return err;
+                    }
+
                     if (ie.getOperator().equals("<"))
                         this.emit(OpCodes.OpGreaterThan);
                     else
                         this.emit(OpCodes.OpGreaterThanEqualTo);
-                    return;
+                    return null;
                 }
-                this.compile(ie.getLeft());
-                this.compile(ie.getRight());
+                err = this.compile(ie.getLeft());
+                if (err != null) {
+                    return err;
+                }
+
+                err = this.compile(ie.getRight());
+                if (err != null) {
+                    return err;
+                }
 
                 switch (ie.getOperator()) {
                     case "+":
@@ -152,11 +188,14 @@ public class Compiler {
                         this.emit(OpCodes.OpNotEqual);
                         break;
                     default:
-                        break;
+                        return new CompilerError("", "Unknown Operator : " + ie.getOperator());
                 }
-                break;
+                return null;
             case PrefixExpression pe:
-                this.compile(pe.getRight());
+                err = this.compile(pe.getRight());
+                if (err != null) {
+                    return err;
+                }
 
                 switch (pe.getOperator()) {
                     case "!":
@@ -166,30 +205,29 @@ public class Compiler {
                         this.emit(OpCodes.OpMinus);
                         break;
                     default:
-                        break;
+                        return new CompilerError("", "Unsupported operator : " + pe.getOperator());
                 }
-                break;
+                return null;
             case Identifier id:
                 symbol = this.symbolTable.resolve(id.getValue());
                 if (symbol == null) {
-                    return;
+                    return new CompilerError("", "Variable does not exist : " + id.getValue());
                 }
                 this.emit(OpCodes.OpGetGlobal, symbol.index);
-                break;
+                return null;
             case IntegerLiteral il:
                 Integer_T integer = new Integer_T(il.getValue());
                 this.emit(OpCodes.OpConstant, this.addConstant(integer));
-                break;
+                return null;
 
             case BooleanLiteral bl:
                 if (bl.getValue())
                     this.emit(OpCodes.OpTrue);
                 else
                     this.emit(OpCodes.OpFalse);
-                break;
-
+                return null;
             default:
-                break;
+                return new CompilerError("", "Unsupported Type : " + node.getClass());
         }
 
     }
@@ -242,36 +280,6 @@ public class Compiler {
 
     public ByteCode bytecode() {
         return new ByteCode(this.instructions, this.constants);
-    }
-
-    Program parse(String input) {
-        Debugger debugger = new Debugger(DebugLevel.HIGH);
-        Lexer lx = new Lexer(input, debugger);
-        lx.tokenize();
-        lx.printTokens();
-        Vector<Token> tokens = lx.getTokens();
-
-        debugger.log("\n\n\n\n----------Parsing------------\n\n\n");
-        Parser ps = new Parser(tokens, debugger);
-        ps.parseProgram();
-        ps.printProgram();
-        Program program = ps.getProgram();
-        Vector<ParserError> errors = ps.getErrors();
-        for (ParserError er : errors) {
-            er.printError();
-        }
-        return program;
-
-    }
-
-    public static void main(String[] args) {
-        Compiler cmp = new Compiler();
-        cmp.compile(cmp.parse("1+2"));
-        System.out.println(new Code().toString(cmp.instructions));
-        VM vm = new VM(cmp.bytecode());
-        vm.run();
-        System.out.println(vm.stackTop().inspect());
-
     }
 
 }

@@ -83,6 +83,7 @@ public class Code {
                 res += i + " " + fmtIns(ins, def, some.operands) + "\n";
                 i += some.offset + 1;
             } else {
+                System.out.println("ERR Cant Lookup definition");
                 continue;
             }
         }
@@ -100,7 +101,7 @@ public class Code {
             case 1:
                 return def.name + " " + operands[0];
         }
-        return "ERROR No idea";
+        return "ERROR: Unhandled operand Count";
     }
 
 }

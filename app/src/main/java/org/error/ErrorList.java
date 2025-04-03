@@ -6,4 +6,19 @@ public interface ErrorList {
 	String OUT_OF_TOKENS = "OUT_OF_TOKENS";
 	String INVALID_SYNTAX = "INVALID_SYNTAX";
 
+	public interface LexerError {
+
+	}
+
+	public interface ParserError {
+
+	}
+
+	public interface CompilerError {
+
+	}
+
+	public interface VMError {
+
+	}
 }

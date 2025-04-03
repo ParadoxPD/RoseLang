@@ -6,13 +6,16 @@ import java.util.Vector;
 import org.debugger.DebugLevel;
 import org.debugger.Debugger;
 import org.environment.Environment;
+import org.error.CompilerError;
 import org.error.ParserError;
+import org.error.VMError;
 import org.evaluator.Evaluator;
 import org.lexer.*;
 import org.parser.*;
 import org.compiler.*;
 import org.typesystem.Object_T;
 import org.vm.VM;
+import org.repl.utils.*;
 
 public class REPL {
 
@@ -35,34 +38,50 @@ public class REPL {
       if (input == null || input.equals("")) {
         continue;
       }
-      if (input.equals("exit")) {
-        sc.close();
-        break;
-      }
-      Lexer lx = new Lexer(input, debugger);
-      lx.tokenize();
-      lx.printTokens();
-      Vector<Token> tokens = lx.getTokens();
-      debugger.log("\n\n\n\n----------Parsing------------\n\n\n");
-      Parser ps = new Parser(tokens, debugger);
-      ps.parseProgram();
-      ps.printProgram();
-      Program program = ps.getProgram();
-      Vector<ParserError> errors = ps.getErrors();
-      if (errors.size() == 0) {
+      switch (input) {
+        case REPLKeywords.exitK:
+          return;
+        case REPLKeywords.helpK:
+          help();
+          continue;
+        case REPLKeywords.clearK:
+          System.out.print("\033[H\033[2J");
+          continue;
+        default:
+          Lexer lx = new Lexer(input, debugger);
+          lx.tokenize();
+          lx.printTokens();
+          Vector<Token> tokens = lx.getTokens();
+          debugger.log("\n\n\n\n----------Parsing------------\n\n\n");
+          Parser ps = new Parser(tokens, debugger);
+          ps.parseProgram();
+          ps.printProgram();
+          Program program = ps.getProgram();
+          Vector<ParserError> errors = ps.getErrors();
+          if (errors.size() == 0) {
 
-        Compiler cmp = new Compiler(symbolTable, constants);
-        cmp.compile(program);
-        VM machine = new VM(cmp.bytecode(), globals);
-        machine.run();
-        Object_T stackTop = machine.lastPoppedStackElement();
-        System.out.println(stackTop.inspect());
+            Compiler cmp = new Compiler(symbolTable, constants);
+            CompilerError err = cmp.compile(program);
+            if (err != null) {
+              err.printError();
+              continue;
+            }
+            VM machine = new VM(cmp.bytecode(), globals);
+            VMError v_err = machine.run();
+            if (v_err != null) {
+              v_err.printError();
+              continue;
+            }
+            Object_T stackTop = machine.lastPoppedStackElement();
+            System.out.println(stackTop.inspect());
 
-      } else {
+          } else {
 
-        for (ParserError er : errors) {
-          er.printError();
-        }
+            for (ParserError er : errors) {
+              er.printError();
+            }
+          }
+          break;
       }
     }
 
@@ -116,6 +135,10 @@ public class REPL {
       }
     }
 
+  }
+
+  public static void help() {
+    System.out.println("HELP");
   }
 
 }

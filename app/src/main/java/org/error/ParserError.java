@@ -12,6 +12,6 @@ public class ParserError extends Error {
 
 	@Override
 	public void printError() {
-		System.out.println("Parser Error : " + super.getErrorMessage());
+		System.out.println("[Parser Error] " + super.getErrorMessage());
 	}
 }

@@ -3,6 +3,7 @@ package org.vm;
 import java.util.Vector;
 
 import org.code.*;
+import org.error.*;
 import org.code.utils.*;
 import org.compiler.*;
 import org.typesystem.*;
@@ -45,45 +46,76 @@ public class VM {
         return this.stack.get(this.sp - 1);
     }
 
-    public void run() {
+    public VMError run() {
+        VMError err = null;
         for (int insPointer = 0; insPointer < this.instructions.size(); insPointer++) {
             byte op = this.instructions.get(insPointer);
+            System.out.println("Operator : " + op);
             switch (op) {
                 case OpCodes.OpConstant:
                     int constIndex = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
                     insPointer += 2;
-                    if (this.push(this.constants.get(constIndex)) != 0) {
-                        return;
+                    err = this.push(this.constants.get(constIndex));
+                    if (err != null) {
+                        return err;
                     }
                     break;
                 case OpCodes.OpNull:
-                    this.push(Constants.NULL);
+                    err = this.push(Constants.NULL);
+                    if (err != null) {
+                        return err;
+                    }
                     break;
+
                 case OpCodes.OpTrue:
-                    this.push(Constants.TRUE);
+                    err = this.push(Constants.TRUE);
+                    if (err != null) {
+                        return err;
+                    }
                     break;
+
                 case OpCodes.OpFalse:
-                    this.push(Constants.FALSE);
+                    err = this.push(Constants.FALSE);
+                    if (err != null) {
+                        return err;
+                    }
                     break;
+
                 case OpCodes.OpAdd:
                 case OpCodes.OpSub:
                 case OpCodes.OpMul:
                 case OpCodes.OpDiv:
                 case OpCodes.OpPow:
-                    this.executeBinaryOperation(op);
+                    err = this.executeBinaryOperation(op);
+                    if (err != null) {
+                        return err;
+                    }
                     break;
+
                 case OpCodes.OpEqual:
                 case OpCodes.OpNotEqual:
                 case OpCodes.OpGreaterThan:
                 case OpCodes.OpGreaterThanEqualTo:
-                    this.executeComparision(op);
+                    err = this.executeComparision(op);
+                    if (err != null) {
+                        return err;
+                    }
                     break;
+
                 case OpCodes.OpBang:
-                    this.executeBangOperator();
+                    err = this.executeBangOperator();
+                    if (err != null) {
+                        return err;
+                    }
                     break;
+
                 case OpCodes.OpMinus:
-                    this.executeMinusOperation();
+                    err = this.executeMinusOperation();
+                    if (err != null) {
+                        return err;
+                    }
                     break;
+
                 case OpCodes.OpPop:
                     this.pop();
                     break;
@@ -111,12 +143,18 @@ public class VM {
                 case OpCodes.OpGetGlobal:
                     globalIndex = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
                     insPointer += 2;
-                    this.push(this.globals.get(globalIndex));
-                default:
+                    err = this.push(this.globals.get(globalIndex));
+                    if (err != null) {
+                        return err;
+                    }
                     break;
+
+                default:
+                    return new VMError("", "Unsupported Operation : " + op);
 
             }
         }
+        return err;
     }
 
     boolean isTruth(Object_T condition) {
@@ -128,102 +166,89 @@ public class VM {
         }
     }
 
-    void executeMinusOperation() {
+    VMError executeMinusOperation() {
         Object_T operand = this.pop();
         if (operand instanceof Integer_T) {
-            this.push(new Integer_T(-((Integer_T) operand).getValue()));
+            return this.push(new Integer_T(-((Integer_T) operand).getValue()));
         }
+        return new VMError("", "Unsupported type : " + operand.type());
     }
 
-    void executeBangOperator() {
+    VMError executeBangOperator() {
         Object_T operand = this.pop();
         switch (operand) {
             case Boolean_T bool:
-                this.push(!bool.getValue() ? Constants.TRUE : Constants.FALSE);
-                break;
+                return this.push(!bool.getValue() ? Constants.TRUE : Constants.FALSE);
             case Null_T obj:
-                this.push(Constants.TRUE);
-                break;
+                return this.push(Constants.TRUE);
             default:
-                this.push(Constants.FALSE);
-                break;
+                return this.push(Constants.FALSE);
 
         }
     }
 
-    void executeBinaryOperation(byte op) {
+    VMError executeBinaryOperation(byte op) {
         Object_T right = this.pop();
         Object_T left = this.pop();
         if (left instanceof Integer_T && right instanceof Integer_T) {
-            this.executeBinaryIntegerOperation(op, (Integer_T) left, (Integer_T) right);
+            return this.executeBinaryIntegerOperation(op, (Integer_T) left, (Integer_T) right);
         }
+        return new VMError("", "Unsupported type : " + right.type() + " " + left.type());
     }
 
-    void executeBinaryIntegerOperation(byte op, Integer_T left, Integer_T right) {
+    VMError executeBinaryIntegerOperation(byte op, Integer_T left, Integer_T right) {
         int leftVal = left.getValue();
         int rightVal = right.getValue();
         switch (op) {
             case OpCodes.OpAdd:
-                this.push(new Integer_T(leftVal + rightVal));
-                break;
+                return this.push(new Integer_T(leftVal + rightVal));
             case OpCodes.OpSub:
-                this.push(new Integer_T(leftVal - rightVal));
-                break;
+                return this.push(new Integer_T(leftVal - rightVal));
             case OpCodes.OpMul:
-                this.push(new Integer_T(leftVal * rightVal));
-                break;
+                return this.push(new Integer_T(leftVal * rightVal));
             case OpCodes.OpDiv:
-                this.push(new Integer_T(leftVal / rightVal));
-                break;
+                return this.push(new Integer_T(leftVal / rightVal));
             case OpCodes.OpPow:
-                this.push(new Integer_T((int) Math.pow(leftVal, rightVal)));
-                break;
+                return this.push(new Integer_T((int) Math.pow(leftVal, rightVal)));
             default:
-                break;
+                return new VMError("", "Unsupported Operation : " + op);
         }
 
     }
 
-    void executeComparision(byte op) {
+    VMError executeComparision(byte op) {
         Object_T right = this.pop();
         Object_T left = this.pop();
         if (left instanceof Integer_T && right instanceof Integer_T) {
-            this.executeIntegerComparision(op, (Integer_T) left, (Integer_T) right);
-            return;
+            return this.executeIntegerComparision(op, (Integer_T) left, (Integer_T) right);
         }
         switch (op) {
             case OpCodes.OpEqual:
-                this.push(this.nativeBoolToBooleanObject(left == right));
-                break;
+                return this.push(this.nativeBoolToBooleanObject(left == right));
             case OpCodes.OpNotEqual:
-                this.push(this.nativeBoolToBooleanObject(left != right));
-                break;
+                return this.push(this.nativeBoolToBooleanObject(left != right));
             default:
-                break;
+                return new VMError("", "Unsupported operator : " + op);
 
         }
     }
 
-    void executeIntegerComparision(byte op, Integer_T left, Integer_T right) {
+    VMError executeIntegerComparision(byte op, Integer_T left, Integer_T right) {
         int leftVal = left.getValue();
         int rightVal = right.getValue();
         System.out.println("Left Value : " + leftVal);
         System.out.println("Right Value : " + rightVal);
         switch (op) {
             case OpCodes.OpEqual:
-                this.push(this.nativeBoolToBooleanObject(leftVal == rightVal));
-                break;
+                return this.push(this.nativeBoolToBooleanObject(leftVal == rightVal));
             case OpCodes.OpNotEqual:
-                this.push(this.nativeBoolToBooleanObject(leftVal != rightVal));
-                break;
+                return this.push(this.nativeBoolToBooleanObject(leftVal != rightVal));
             case OpCodes.OpGreaterThan:
-                this.push(this.nativeBoolToBooleanObject(leftVal > rightVal));
-                break;
+                return this.push(this.nativeBoolToBooleanObject(leftVal > rightVal));
             case OpCodes.OpGreaterThanEqualTo:
-                this.push(this.nativeBoolToBooleanObject(leftVal >= rightVal));
-                break;
+                return this.push(this.nativeBoolToBooleanObject(leftVal >= rightVal));
             default:
-                break;
+                return new VMError("", "Unsupported operator : " + op);
         }
 
     }
@@ -232,13 +257,13 @@ public class VM {
         return input ? Constants.TRUE : Constants.FALSE;
     }
 
-    public int push(Object_T o) {
+    public VMError push(Object_T o) {
         if (this.sp >= StackSize) {
-            return 1;
+            return new VMError("", "StackOverFlow");
         }
         this.stack.add(this.sp, o);
         this.sp++;
-        return 0;
+        return null;
     }
 
     public Object_T pop() {
