@@ -203,11 +203,16 @@ public class Lexer {
   }
 
   public void tokenize() {
-    Token tok = null;
-    for (tok = this.nextToken(); !tok.getType().equals(TokenList.EOF); tok = this.nextToken()) {
+    Token tok = this.nextToken();
+    while (!tok.getType().equals(TokenList.EOF)) {
       this.tokens.addElement(tok);
+      tok = this.nextToken();
+      if (tok.getType().equals(TokenList.ILLEGAL)) {
+        System.out.println("Illegal Token : " + tok.printToken());
+        break;
+      }
     }
-    this.tokens.addElement(tok);
+    this.tokens.addElement(new Token(TokenList.EOF, TokenList.EOF));
   }
 
   public Vector<Token> getTokens() {
