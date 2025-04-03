@@ -7,10 +7,8 @@ import org.parser.expressions.*;
 import org.parser.literals.*;
 import org.error.*;
 import org.typesystem.*;
-import org.vm.VM;
 import org.code.utils.*;
 import org.code.*;
-import org.lexer.*;
 import org.debugger.*;
 import java.util.*;
 
@@ -43,6 +41,10 @@ public class Compiler {
     int addConstant(Object_T obj) {
         this.constants.add(obj);
         return this.constants.size() - 1;
+    }
+
+    public void printIns() {
+        System.out.println(Code.toString(this.instructions));
     }
 
     public CompilerError compile(Node node) {

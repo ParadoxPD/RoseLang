@@ -1,20 +1,14 @@
 package org.code;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Vector;
-
-import org.code.utils.Binary;
-import org.code.utils.Definition;
-import org.code.utils.Helper;
-import org.code.utils.OpCodes;
+import org.code.utils.*;
 
 public class Code {
 
     public Code() {
     }
 
-    Definition lookUp(byte op) {
+    static Definition lookUp(byte op) {
         Definition def = OpCodes.Definitions.get(op);
         if (def == null) {
             System.out.println("OpCode " + op + " undefined");
@@ -24,7 +18,7 @@ public class Code {
 
     }
 
-    public byte[] make(byte op, int... operands) {
+    public static byte[] make(byte op, int... operands) {
         Definition def = OpCodes.Definitions.get(op);
         if (def == null) {
             return new byte[] {};
@@ -73,11 +67,11 @@ public class Code {
         return Binary.readUint16(ins, offset);
     }
 
-    public String toString(Vector<Byte> ins) {
+    public static String toString(Vector<Byte> ins) {
         String res = "";
         int i = 0;
         while (i < ins.size()) {
-            Definition def = this.lookUp(ins.get(i));
+            Definition def = lookUp(ins.get(i));
             if (def != null) {
                 Something some = readOperands(def, ins, i + 1);
                 res += i + " " + fmtIns(ins, def, some.operands) + "\n";

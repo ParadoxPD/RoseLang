@@ -62,10 +62,12 @@ public class REPL {
 
             Compiler cmp = new Compiler(symbolTable, constants);
             CompilerError err = cmp.compile(program);
+            cmp.printIns();
             if (err != null) {
               err.printError();
               continue;
             }
+
             VM machine = new VM(cmp.bytecode(), globals);
             VMError v_err = machine.run();
             if (v_err != null) {
