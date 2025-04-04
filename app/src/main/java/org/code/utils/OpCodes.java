@@ -36,6 +36,8 @@ public interface OpCodes {
     byte OpArray = 21;
     byte OpHash = 22;
 
+    byte OpIndex = 23;
+
     Map<Byte, Definition> Definitions =
             Map.ofEntries(
                     new AbstractMap.SimpleEntry<Byte, Definition>(
@@ -83,5 +85,7 @@ public interface OpCodes {
                     new AbstractMap.SimpleEntry<Byte, Definition>(
                             OpCodes.OpHash, new Definition("OpHash", new int[] {2})),
                     new AbstractMap.SimpleEntry<Byte, Definition>(
-                            OpCodes.OpArray, new Definition("OpArray", new int[] {2})));
+                            OpCodes.OpArray, new Definition("OpArray", new int[] {2})),
+                    new AbstractMap.SimpleEntry<Byte, Definition>(
+                            OpCodes.OpIndex, new Definition("OpIndex", new int[] {})));
 }

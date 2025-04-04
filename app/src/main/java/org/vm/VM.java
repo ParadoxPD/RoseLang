@@ -7,6 +7,9 @@ import org.error.*;
 import org.typesystem.*;
 import org.typesystem.utils.*;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 /** VM */
@@ -168,12 +171,68 @@ public class VM {
                         return err;
                     }
                     break;
+                case OpCodes.OpHash:
+                    numElements =
+                            Code.readUint16(
+                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    insPointer += 2;
+                    Object_T hash = this.buildHash(this.sp - numElements, this.sp);
+                    if (hash == null) {
+                        return new VMError("", "Key is not hashable");
+                    }
+                    this.sp = this.sp - numElements;
+                    err = this.push(hash);
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
+                case OpCodes.OpIndex:
+                    Object_T index = this.pop();
+                    Object_T left = this.pop();
 
+                    err = this.executeIndexExpression(left, index);
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
                 default:
                     return new VMError("", "Unsupported Operation : " + op);
             }
         }
         return err;
+    }
+
+    VMError executeIndexExpression(Object_T left, Object_T index) {
+        if (left instanceof Array_T && index instanceof Integer_T) {
+            return this.evalArrayIndexExpression((Array_T) left, (Integer_T) index);
+        } else if (left instanceof Hash_T) {
+            return this.evalHashIndexExpression((Hash_T) left, index);
+        } else {
+            return new VMError("", "Index Operator not supported : " + left.type());
+        }
+    }
+
+    VMError evalArrayIndexExpression(Array_T left, Integer_T index) {
+        int idx = index.getValue();
+        int max = left.getValue().size() - 1;
+        if (idx < 0 || idx > max) {
+            this.push(Constants.NULL);
+            return new VMError("", "Array index out of range : " + idx);
+        }
+        return this.push(left.getValue().get(idx));
+    }
+
+    VMError evalHashIndexExpression(Hash_T hash, Object_T index) {
+        if (!(index instanceof Hashable)) {
+            return new VMError("", "Unusable as hash key : " + index.type());
+        }
+        HashPair pair = hash.getPairs().get(((Hashable) index).hash());
+        if (pair == null) {
+            System.out.println("aaaaaaaaaaaaahhhhhhhh");
+            this.push(Constants.NULL);
+            return new VMError("", "Undefined Key : " + index.inspect());
+        }
+        return this.push(pair.getValue());
     }
 
     Array_T buildArray(int start, int end) {
@@ -182,6 +241,33 @@ public class VM {
             elems.add(this.stack.get(i));
         }
         return new Array_T(elems);
+    }
+
+    Hash_T buildHash(int start, int end) {
+        Map<HashKey, HashPair> pairs =
+                new HashMap<HashKey, HashPair>() {
+                    @Override
+                    public HashPair get(Object key) {
+                        Set<HashKey> keys = this.keySet();
+                        for (HashKey k : keys) {
+                            if (k.getKey() == ((HashKey) key).getKey()) {
+                                return super.get(k);
+                            }
+                        }
+                        return null;
+                    }
+                };
+        for (int i = start; i < end; i += 2) {
+            Object_T key = this.stack.get(i);
+            if (!(key instanceof Hashable)) {
+                return null;
+            }
+            Object_T value = this.stack.get(i + 1);
+            HashPair pair = new HashPair(key, value);
+
+            pairs.put(((Hashable) key).hash(), pair);
+        }
+        return new Hash_T(pairs);
     }
 
     boolean isTruth(Object_T condition) {

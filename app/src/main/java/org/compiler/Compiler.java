@@ -81,8 +81,13 @@ public class Compiler {
                 if (err != null) {
                     return err;
                 }
+                Symbol symbol = this.symbolTable.resolve(ls.getName().getValue());
+                if (symbol != null) {
+                    return new CompilerError(
+                            "", "Variable already exists : " + ls.getName().getValue());
+                }
 
-                Symbol symbol = this.symbolTable.define(ls.getName().getValue());
+                symbol = this.symbolTable.define(ls.getName().getValue());
                 this.emit(OpCodes.OpSetGlobal, symbol.index);
                 return null;
             case AssignmentStatement as:
@@ -230,6 +235,17 @@ public class Compiler {
                         return new CompilerError("", "Unsupported operator : " + pe.getOperator());
                 }
                 return null;
+            case IndexExpression ie:
+                err = this.compile(ie.getLeft());
+                if (err != null) {
+                    return err;
+                }
+                err = this.compile(ie.getIndex());
+                if (err != null) {
+                    return err;
+                }
+                this.emit(OpCodes.OpIndex);
+                return null;
             case Identifier id:
                 symbol = this.symbolTable.resolve(id.getValue());
                 if (symbol == null) {
@@ -261,6 +277,20 @@ public class Compiler {
                     }
                 }
                 this.emit(OpCodes.OpArray, al.getElements().size());
+                return null;
+            case HashLiteral hl:
+                for (Expression key : hl.getElements().keySet()) {
+                    err = this.compile(key);
+                    if (err != null) {
+                        return err;
+                    }
+                    err = this.compile(hl.getElement(key));
+                    if (err != null) {
+                        return err;
+                    }
+                }
+                this.emit(OpCodes.OpHash, hl.getElements().size() * 2);
+
                 return null;
             default:
                 return new CompilerError("", "Unsupported Type : " + node.getClass());
