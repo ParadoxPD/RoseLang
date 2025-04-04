@@ -3,59 +3,79 @@ package org.parser.expressions;
 import org.lexer.*;
 import org.parser.statements.*;
 
+import java.util.*;
+
 public class IfExpression implements Expression {
-  Token token;
-  Expression condition;
-  BlockStatement consequence;
-  BlockStatement alternative;
+    Token token;
+    Expression condition;
+    BlockStatement consequence;
+    Vector<ElifExpression> elifExpressions;
+    BlockStatement alternative;
 
-  public IfExpression(Token tok) {
-    this.token = tok;
-  }
+    public IfExpression(Token tok) {
+        this.token = tok;
+        this.elifExpressions = new Vector<ElifExpression>();
+    }
 
-  @Override
-  public void expressionNode() {}
+    @Override
+    public void expressionNode() {}
 
-  @Override
-  public String getTokenValue() {
-    return this.token.getTokenValue();
-  }
+    @Override
+    public String getTokenValue() {
+        return this.token.getTokenValue();
+    }
 
-  @Override
-  public String getNodeValue() {
-    // return "";
-    return "if "
-        + this.condition.getNodeValue()
-        + this.consequence.getNodeValue()
-        + ((this.alternative != null) ? ("else" + this.alternative.getNodeValue()) : "");
-  }
+    @Override
+    public String getNodeValue() {
+        // return "";
+        String res = "if " + this.condition.getNodeValue() + this.consequence.getNodeValue();
 
-  @Override
-  public String print(String msg) {
-    return (msg + " " + this.getNodeValue());
-  }
+        for (ElifExpression elf : this.elifExpressions) {
+            res += elf.getNodeValue();
+        }
 
-  public void setCondition(Expression condition) {
-    this.condition = condition;
-  }
+        res += ((this.alternative != null) ? ("else" + this.alternative.getNodeValue()) : "");
+        return res;
+    }
 
-  public void setConsequence(BlockStatement consequence) {
-    this.consequence = consequence;
-  }
+    @Override
+    public String print(String msg) {
+        return (msg + " " + this.getNodeValue());
+    }
 
-  public void setAlternative(BlockStatement alternative) {
-    this.alternative = alternative;
-  }
+    public void setCondition(Expression condition) {
+        this.condition = condition;
+    }
 
-  public Expression getCondition() {
-    return this.condition;
-  }
+    public void setConsequence(BlockStatement consequence) {
+        this.consequence = consequence;
+    }
 
-  public BlockStatement getConsequence() {
-    return this.consequence;
-  }
+    public void setAlternative(BlockStatement alternative) {
+        this.alternative = alternative;
+    }
 
-  public BlockStatement getAlternative() {
-    return this.alternative;
-  }
+    public Expression getCondition() {
+        return this.condition;
+    }
+
+    public BlockStatement getConsequence() {
+        return this.consequence;
+    }
+
+    public BlockStatement getAlternative() {
+        return this.alternative;
+    }
+
+    public void addElifExpression(ElifExpression exp) {
+        this.elifExpressions.add(exp);
+    }
+
+    public Vector<ElifExpression> getElifExpression() {
+        return this.elifExpressions;
+    }
+
+    public boolean elifExists() {
+        return this.elifExpressions.size() > 0;
+    }
 }

@@ -1,21 +1,19 @@
 package org.vm;
 
-import java.util.Vector;
-
 import org.code.*;
-import org.error.*;
 import org.code.utils.*;
 import org.compiler.*;
+import org.error.*;
 import org.typesystem.*;
 import org.typesystem.utils.*;
 
-/**
- * VM
- */
+import java.util.Vector;
+
+/** VM */
 public class VM {
 
-    public final static int StackSize = 2048;
-    public final static int GlobalsSize = 65536;
+    public static final int StackSize = 2048;
+    public static final int GlobalsSize = 65536;
 
     Vector<Object_T> constants;
     Vector<Byte> instructions;
@@ -53,7 +51,9 @@ public class VM {
             System.out.println("Operator : " + op);
             switch (op) {
                 case OpCodes.OpConstant:
-                    int constIndex = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    int constIndex =
+                            Code.readUint16(
+                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
                     insPointer += 2;
                     err = this.push(this.constants.get(constIndex));
                     if (err != null) {
@@ -120,11 +120,15 @@ public class VM {
                     this.pop();
                     break;
                 case OpCodes.OpJump:
-                    int pos = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    int pos =
+                            Code.readUint16(
+                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
                     insPointer = pos - 1;
                     break;
                 case OpCodes.OpJumpNotTruthy:
-                    pos = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    pos =
+                            Code.readUint16(
+                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
                     insPointer += 2;
 
                     Object_T condition = this.pop();
@@ -133,15 +137,18 @@ public class VM {
                     }
                     break;
                 case OpCodes.OpSetGlobal:
-                    int globalIndex = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    int globalIndex =
+                            Code.readUint16(
+                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
                     insPointer += 2;
                     if (this.globals.size() <= globalIndex)
                         this.globals.add(globalIndex, this.pop());
-                    else
-                        this.globals.set(globalIndex, this.pop());
+                    else this.globals.set(globalIndex, this.pop());
                     break;
                 case OpCodes.OpGetGlobal:
-                    globalIndex = Code.readUint16(Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    globalIndex =
+                            Code.readUint16(
+                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
                     insPointer += 2;
                     err = this.push(this.globals.get(globalIndex));
                     if (err != null) {
@@ -149,12 +156,32 @@ public class VM {
                     }
                     break;
 
+                case OpCodes.OpArray:
+                    int numElements =
+                            Code.readUint16(
+                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
+                    insPointer += 2;
+                    Object_T array = this.buildArray(this.sp - numElements, this.sp);
+                    this.sp = this.sp - numElements;
+                    err = this.push(array);
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
+
                 default:
                     return new VMError("", "Unsupported Operation : " + op);
-
             }
         }
         return err;
+    }
+
+    Array_T buildArray(int start, int end) {
+        Vector<Object_T> elems = new Vector<Object_T>();
+        for (int i = start; i < end; i++) {
+            elems.add(this.stack.get(i));
+        }
+        return new Array_T(elems);
     }
 
     boolean isTruth(Object_T condition) {
@@ -187,7 +214,6 @@ public class VM {
                 return this.push(Constants.TRUE);
             default:
                 return this.push(Constants.FALSE);
-
         }
     }
 
@@ -202,43 +228,75 @@ public class VM {
 
     VMError executePrimitiveBinaryOperation(byte op, Object_T left, Object_T right) {
         switch (left) {
-            case Integer_T it when right instanceof Integer_T:
+            case Integer_T it
+            when right instanceof Integer_T:
                 return this.executeBinaryIntegerOperation(op, it, (Integer_T) right);
-            case Integer_T it when right instanceof Boolean_T:
-                return this.executeBinaryIntegerOperation(op, it,
-                        new Integer_T(((Boolean_T) right).getValue() ? 1 : 0));
-            case Boolean_T it when right instanceof Integer_T:
-                return this.executeBinaryIntegerOperation(op, new Integer_T(it.getValue() ? 1 : 0), (Integer_T) right);
+            case Integer_T it
+            when right instanceof Boolean_T:
+                return this.executeBinaryIntegerOperation(
+                        op, it, new Integer_T(((Boolean_T) right).getValue() ? 1 : 0));
+            case Boolean_T it
+            when right instanceof Integer_T:
+                return this.executeBinaryIntegerOperation(
+                        op, new Integer_T(it.getValue() ? 1 : 0), (Integer_T) right);
 
-            case Float_T it when right instanceof Float_T:
+            case Float_T it
+            when right instanceof Float_T:
                 return this.executeBinaryFloatOperation(op, it, (Float_T) right);
-            case Float_T it when right instanceof Integer_T:
-                return this.executeBinaryFloatOperation(op, it, new Float_T(((Integer_T) right).getValue()));
-            case Float_T it when right instanceof Boolean_T:
-                return this.executeBinaryFloatOperation(op, it, new Float_T(((Boolean_T) right).getValue() ? 1 : 0));
-            case Integer_T it when right instanceof Float_T:
-                return this.executeBinaryFloatOperation(op, new Float_T(it.getValue()), (Float_T) right);
-            case Boolean_T it when right instanceof Float_T:
-                return this.executeBinaryFloatOperation(op, new Float_T(it.getValue() ? 1 : 0), (Float_T) right);
+            case Float_T it
+            when right instanceof Integer_T:
+                return this.executeBinaryFloatOperation(
+                        op, it, new Float_T(((Integer_T) right).getValue()));
+            case Float_T it
+            when right instanceof Boolean_T:
+                return this.executeBinaryFloatOperation(
+                        op, it, new Float_T(((Boolean_T) right).getValue() ? 1 : 0));
+            case Integer_T it
+            when right instanceof Float_T:
+                return this.executeBinaryFloatOperation(
+                        op, new Float_T(it.getValue()), (Float_T) right);
+            case Boolean_T it
+            when right instanceof Float_T:
+                return this.executeBinaryFloatOperation(
+                        op, new Float_T(it.getValue() ? 1 : 0), (Float_T) right);
 
-            case String_T it when right instanceof String_T:
+            case String_T it
+            when right instanceof String_T:
                 return this.executeBinaryStringOperation(op, it, (String_T) right);
-            case String_T it when right instanceof Integer_T:
-                return this.executeBinaryStringOperation(op, it, new String_T(((Integer_T) right).getValue() + ""));
-            case String_T it when right instanceof Float_T:
-                return this.executeBinaryStringOperation(op, it, new String_T(((Float_T) right).getValue() + ""));
-            case String_T it when right instanceof Boolean_T:
-                return this.executeBinaryStringOperation(op, it, new String_T(((Boolean_T) right).getValue() + ""));
-            case Boolean_T it when right instanceof String_T:
-                return this.executeBinaryStringOperation(op, new String_T(it.getValue() + ""), (String_T) right);
-            case Float_T it when right instanceof String_T:
-                return this.executeBinaryStringOperation(op, new String_T(it.getValue() + ""), (String_T) right);
-            case Integer_T it when right instanceof String_T:
-                return this.executeBinaryStringOperation(op, new String_T(it.getValue() + ""), (String_T) right);
+            case String_T it
+            when right instanceof Integer_T:
+                return this.executeBinaryStringOperation(
+                        op, it, new String_T(((Integer_T) right).getValue() + ""));
+            case String_T it
+            when right instanceof Float_T:
+                return this.executeBinaryStringOperation(
+                        op, it, new String_T(((Float_T) right).getValue() + ""));
+            case String_T it
+            when right instanceof Boolean_T:
+                return this.executeBinaryStringOperation(
+                        op, it, new String_T(((Boolean_T) right).getValue() + ""));
+            case Boolean_T it
+            when right instanceof String_T:
+                return this.executeBinaryStringOperation(
+                        op, new String_T(it.getValue() + ""), (String_T) right);
+            case Float_T it
+            when right instanceof String_T:
+                return this.executeBinaryStringOperation(
+                        op, new String_T(it.getValue() + ""), (String_T) right);
+            case Integer_T it
+            when right instanceof String_T:
+                return this.executeBinaryStringOperation(
+                        op, new String_T(it.getValue() + ""), (String_T) right);
 
             default:
-                return new VMError("",
-                        "Operation : " + op + " not permitted for type : " + left.type() + " " + right.type());
+                return new VMError(
+                        "",
+                        "Operation : "
+                                + op
+                                + " not permitted for type : "
+                                + left.type()
+                                + " "
+                                + right.type());
         }
     }
 
@@ -259,7 +317,6 @@ public class VM {
             default:
                 return new VMError("", "Unsupported Operation : " + op);
         }
-
     }
 
     VMError executeBinaryFloatOperation(byte op, Float_T left, Float_T right) {
@@ -279,7 +336,6 @@ public class VM {
             default:
                 return new VMError("", "Unsupported Operation : " + op);
         }
-
     }
 
     VMError executeBinaryStringOperation(byte op, String_T left, String_T right) {
@@ -292,24 +348,30 @@ public class VM {
             default:
                 return new VMError("", "Unsupported Operation : " + op);
         }
-
     }
 
     VMError executeComparision(byte op) {
         Object_T right = this.pop();
         Object_T left = this.pop();
         switch (left) {
-            case Integer_T it when right instanceof Integer_T:
+            case Integer_T it
+            when right instanceof Integer_T:
                 return this.executeIntegerComparision(op, it, (Integer_T) right);
 
-            case Float_T it when right instanceof Float_T:
+            case Float_T it
+            when right instanceof Float_T:
                 return this.executeFloatComparision(op, it, (Float_T) right);
-            case Float_T it when right instanceof Integer_T:
-                return this.executeFloatComparision(op, it, new Float_T(((Integer_T) right).getValue()));
-            case Integer_T it when right instanceof Float_T:
-                return this.executeFloatComparision(op, new Float_T(it.getValue()), (Float_T) right);
+            case Float_T it
+            when right instanceof Integer_T:
+                return this.executeFloatComparision(
+                        op, it, new Float_T(((Integer_T) right).getValue()));
+            case Integer_T it
+            when right instanceof Float_T:
+                return this.executeFloatComparision(
+                        op, new Float_T(it.getValue()), (Float_T) right);
 
-            case Boolean_T it when right instanceof Boolean_T:
+            case Boolean_T it
+            when right instanceof Boolean_T:
                 switch (op) {
                     case OpCodes.OpEqual:
                         return this.push(this.nativeBoolToBooleanObject(left == right));
@@ -340,7 +402,6 @@ public class VM {
             default:
                 return new VMError("", "Unsupported operator : " + op);
         }
-
     }
 
     VMError executeFloatComparision(byte op, Float_T left, Float_T right) {
@@ -360,7 +421,6 @@ public class VM {
             default:
                 return new VMError("", "Unsupported operator : " + op);
         }
-
     }
 
     Boolean_T nativeBoolToBooleanObject(boolean input) {

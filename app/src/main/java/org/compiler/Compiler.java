@@ -1,15 +1,15 @@
-
 package org.compiler;
 
+import org.code.*;
+import org.code.utils.*;
+import org.debugger.*;
+import org.error.*;
 import org.parser.*;
-import org.parser.statements.*;
 import org.parser.expressions.*;
 import org.parser.literals.*;
-import org.error.*;
+import org.parser.statements.*;
 import org.typesystem.*;
-import org.code.utils.*;
-import org.code.*;
-import org.debugger.*;
+
 import java.util.*;
 
 public class Compiler {
@@ -28,14 +28,12 @@ public class Compiler {
         this.lastInstruction = new EmittedInstruction();
         this.previousInstruction = new EmittedInstruction();
         this.symbolTable = new SymbolTable();
-
     }
 
     public Compiler(SymbolTable st, Vector<Object_T> constants) {
         this();
         this.symbolTable = st;
         this.constants = constants;
-
     }
 
     int addConstant(Object_T obj) {
@@ -94,7 +92,8 @@ public class Compiler {
                 }
                 symbol = this.symbolTable.resolve(as.getName().getValue());
                 if (symbol == null) {
-                    return new CompilerError("", "Variable does not exist : " + as.getName().getValue());
+                    return new CompilerError(
+                            "", "Variable does not exist : " + as.getName().getValue());
                 }
                 this.emit(OpCodes.OpSetGlobal, symbol.index);
                 return err;
@@ -112,10 +111,33 @@ public class Compiler {
                 if (this.lastInstructionIsPop()) {
                     this.removeLastPop();
                 }
+                Vector<Integer> jumpPoses = new Vector<>();
 
-                int jumpPos = this.emit(OpCodes.OpJump, 9999);
+                jumpPoses.add(
+                        this.emit(OpCodes.OpJump, 9999)); // Should go out of the if else block
                 int afterConsequencePos = this.instructions.size();
                 this.changeOperand(jumpNotTruthyPos, afterConsequencePos);
+
+                for (ElifExpression elf : ie.getElifExpression()) {
+                    err = this.compile(elf.getCondition());
+
+                    if (err != null) {
+                        return err;
+                    }
+                    jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
+                    err = this.compile(elf.getConsequence());
+                    if (err != null) {
+                        return err;
+                    }
+                    if (this.lastInstructionIsPop()) {
+                        this.removeLastPop();
+                    }
+
+                    jumpPoses.add(this.emit(OpCodes.OpJump, 9999));
+                    afterConsequencePos = this.instructions.size();
+
+                    this.changeOperand(jumpNotTruthyPos, afterConsequencePos);
+                }
 
                 if (ie.getAlternative() == null) {
                     this.emit(OpCodes.OpNull);
@@ -131,7 +153,7 @@ public class Compiler {
                 }
 
                 int afterAlternativePos = this.instructions.size();
-                this.changeOperand(jumpPos, afterAlternativePos);
+                for (int jumpPos : jumpPoses) this.changeOperand(jumpPos, afterAlternativePos);
                 return null;
             case InfixExpression ie:
                 if (ie.getOperator().equals("<") || ie.getOperator().equals("<=")) {
@@ -145,10 +167,8 @@ public class Compiler {
                         return err;
                     }
 
-                    if (ie.getOperator().equals("<"))
-                        this.emit(OpCodes.OpGreaterThan);
-                    else
-                        this.emit(OpCodes.OpGreaterThanEqualTo);
+                    if (ie.getOperator().equals("<")) this.emit(OpCodes.OpGreaterThan);
+                    else this.emit(OpCodes.OpGreaterThanEqualTo);
                     return null;
                 }
                 err = this.compile(ie.getLeft());
@@ -226,19 +246,25 @@ public class Compiler {
                 this.emit(OpCodes.OpConstant, this.addConstant(f));
                 return null;
             case BooleanLiteral bl:
-                if (bl.getValue())
-                    this.emit(OpCodes.OpTrue);
-                else
-                    this.emit(OpCodes.OpFalse);
+                if (bl.getValue()) this.emit(OpCodes.OpTrue);
+                else this.emit(OpCodes.OpFalse);
                 return null;
             case StringLiteral s:
                 String_T str = new String_T(s.getValue());
                 this.emit(OpCodes.OpConstant, this.addConstant(str));
                 return null;
+            case ArrayLiteral al:
+                for (Expression ex : al.getElements()) {
+                    err = this.compile(ex);
+                    if (err != null) {
+                        return err;
+                    }
+                }
+                this.emit(OpCodes.OpArray, al.getElements().size());
+                return null;
             default:
                 return new CompilerError("", "Unsupported Type : " + node.getClass());
         }
-
     }
 
     boolean lastInstructionIsPop() {
@@ -260,10 +286,8 @@ public class Compiler {
 
     int addInstuctions(byte[] ins) {
         int pos = this.instructions.size();
-        for (byte in : ins)
-            this.instructions.add(in);
+        for (byte in : ins) this.instructions.add(in);
         return pos;
-
     }
 
     void replaceInstruction(int pos, byte[] newInstruction) {
@@ -290,7 +314,6 @@ public class Compiler {
     public ByteCode bytecode() {
         return new ByteCode(this.instructions, this.constants);
     }
-
 }
 
 class EmittedInstruction {

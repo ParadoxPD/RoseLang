@@ -53,175 +53,213 @@ public class Parser {
 
     void registerAllParsers() {
 
-        PrefixParser integerParser = new PrefixParser() {
-            @Override
-            public Expression parse() {
-                IntegerLiteral lit = new IntegerLiteral(curr);
+        PrefixParser integerParser =
+                new PrefixParser() {
+                    @Override
+                    public Expression parse() {
+                        IntegerLiteral lit = new IntegerLiteral(curr);
 
-                // TODO: ADD ERROR CHECKING FOR INTEGER VALUE
-                int val = Integer.parseInt(curr.getTokenValue());
-                lit.setValue(val);
-                return lit;
-            }
-        };
-        PrefixParser floatParser = new PrefixParser() {
-            @Override
-            public Expression parse() {
-                FloatLiteral lit = new FloatLiteral(curr);
-
-                // TODO: ADD ERROR CHECKING FOR FLOAT VALUE
-                float val = Float.parseFloat(curr.getTokenValue());
-                lit.setValue(val);
-                return lit;
-            }
-        };
-        PrefixParser idenParser = new PrefixParser() {
-            @Override
-            public Expression parse() {
-                return new Identifier(curr, curr.getTokenValue());
-            }
-        };
-
-        PrefixParser prefixExpressionParser = new PrefixParser() {
-            @Override
-            Expression parse() {
-                PrefixExpression exp = new PrefixExpression(curr, curr.getTokenValue());
-                nextToken();
-                exp.setRight(parseExpression(PrecedenceList.PREFIX));
-                return exp;
-            }
-        };
-
-        PrefixParser booleanParser = new PrefixParser() {
-            @Override
-            Expression parse() {
-                return new BooleanLiteral(curr, currTokenIs(TokenList.TRUE));
-            }
-        };
-
-        PrefixParser groupedExpressionParser = new PrefixParser() {
-            @Override
-            Expression parse() {
-                nextToken();
-                Expression exp = parseExpression(PrecedenceList.LOWEST);
-
-                if (!expectPeek(TokenList.PAREN_CLOSE)) {
-                    errors.addElement(new ParserError("Missing Symbol", "( missing"));
-                    return null;
-                }
-                return exp;
-            }
-        };
-
-        PrefixParser ifExpressionParser = new PrefixParser() {
-            @Override
-            Expression parse() {
-                IfExpression stm = new IfExpression(curr);
-                if (!expectPeek(TokenList.PAREN_OPEN)) {
-                    errors.addElement(new ParserError("Missing Symbol", "( missing"));
-                    return null;
-                }
-
-                nextToken();
-                stm.setCondition(parseExpression(PrecedenceList.LOWEST));
-
-                if (!expectPeek(TokenList.PAREN_CLOSE)) {
-                    errors.addElement(new ParserError("Missing Symbol", "( missing"));
-                    return null;
-                }
-                if (!expectPeek(TokenList.BRACE_OPEN)) {
-                    errors.addElement(new ParserError("Missing Symbol", "{ missing"));
-                    return null;
-                }
-                stm.setConsequence(parseBlockStatement());
-
-                if (peekTokenIs(TokenList.ELSE)) {
-                    nextToken();
-                    if (!expectPeek(TokenList.BRACE_OPEN)) {
-                        errors.addElement(new ParserError("Missing Symbol", "{ missing"));
-                        return null;
+                        // TODO: ADD ERROR CHECKING FOR INTEGER VALUE
+                        int val = Integer.parseInt(curr.getTokenValue());
+                        lit.setValue(val);
+                        return lit;
                     }
-                    stm.setAlternative(parseBlockStatement());
-                }
+                };
+        PrefixParser floatParser =
+                new PrefixParser() {
+                    @Override
+                    public Expression parse() {
+                        FloatLiteral lit = new FloatLiteral(curr);
 
-                return stm;
-            }
-        };
-        PrefixParser functionParser = new PrefixParser() {
-            @Override
-            Expression parse() {
-                FunctionLiteral fnt = new FunctionLiteral(curr);
-
-                if (!expectPeek(TokenList.IDENTIFIER)) {
-                    errors.addElement(
-                            new ParserError("Identifier missing", "Function needs a name"));
-                    return null;
-                }
-                fnt.setName(new Identifier(curr, curr.getTokenValue()));
-
-                if (!expectPeek(TokenList.PAREN_OPEN)) {
-                    errors.addElement(new ParserError("Missing Symbol", "( missing"));
-                    return null;
-                }
-                fnt.addParameters(parseFunctionParameters());
-
-                if (!expectPeek(TokenList.BRACE_OPEN)) {
-                    errors.addElement(new ParserError("Missing Symbol", "{ missing"));
-                    return null;
-                }
-                fnt.addBody(parseBlockStatement());
-                debugger.log(fnt.print("Function : "));
-                return fnt;
-            }
-        };
-
-        PrefixParser stringParser = new PrefixParser() {
-            @Override
-            Expression parse() {
-                return new StringLiteral(curr, curr.getTokenValue());
-            }
-        };
-
-        PrefixParser arrayParser = new PrefixParser() {
-            @Override
-            Expression parse() {
-                return new ArrayLiteral(
-                        curr, parseExpressionList(TokenList.SQUARE_BRACKET_CLOSE));
-            }
-        };
-
-        PrefixParser hashLiteralParser = new PrefixParser() {
-            @Override
-            Expression parse() {
-                HashLiteral hash = new HashLiteral(curr, new HashMap<Expression, Expression>());
-
-                while (!peekTokenIs(TokenList.BRACE_CLOSE)) {
-                    nextToken();
-                    Expression key = parseExpression(PrecedenceList.LOWEST);
-
-                    if (!expectPeek(TokenList.COLON)) {
-                        errors.addElement(new ParserError("Missing Symbol", ": missing"));
-                        return null;
+                        // TODO: ADD ERROR CHECKING FOR FLOAT VALUE
+                        float val = Float.parseFloat(curr.getTokenValue());
+                        lit.setValue(val);
+                        return lit;
                     }
-                    nextToken();
-                    Expression value = parseExpression(PrecedenceList.LOWEST);
-
-                    hash.addElement(key, value);
-
-                    if (!peekTokenIs(TokenList.BRACE_CLOSE)
-                            && !expectPeek(TokenList.COMMA)) {
-                        errors.addElement(new ParserError("Missing Symbol", "}, missing"));
-                        return null;
+                };
+        PrefixParser idenParser =
+                new PrefixParser() {
+                    @Override
+                    public Expression parse() {
+                        return new Identifier(curr, curr.getTokenValue());
                     }
-                }
-                if (!expectPeek(TokenList.BRACE_CLOSE)) {
-                    errors.addElement(new ParserError("Missing Symbol", "} missing"));
-                    return null;
-                }
+                };
 
-                return hash;
-            }
-        };
+        PrefixParser prefixExpressionParser =
+                new PrefixParser() {
+                    @Override
+                    Expression parse() {
+                        PrefixExpression exp = new PrefixExpression(curr, curr.getTokenValue());
+                        nextToken();
+                        exp.setRight(parseExpression(PrecedenceList.PREFIX));
+                        return exp;
+                    }
+                };
+
+        PrefixParser booleanParser =
+                new PrefixParser() {
+                    @Override
+                    Expression parse() {
+                        return new BooleanLiteral(curr, currTokenIs(TokenList.TRUE));
+                    }
+                };
+
+        PrefixParser groupedExpressionParser =
+                new PrefixParser() {
+                    @Override
+                    Expression parse() {
+                        nextToken();
+                        Expression exp = parseExpression(PrecedenceList.LOWEST);
+
+                        if (!expectPeek(TokenList.PAREN_CLOSE)) {
+                            errors.addElement(new ParserError("Missing Symbol", "( missing"));
+                            return null;
+                        }
+                        return exp;
+                    }
+                };
+
+        PrefixParser ifExpressionParser =
+                new PrefixParser() {
+                    @Override
+                    Expression parse() {
+                        debugger.log("INSIDE IF BLOCK");
+                        IfExpression stm = new IfExpression(curr);
+                        if (!expectPeek(TokenList.PAREN_OPEN)) {
+                            errors.addElement(new ParserError("Missing Symbol", "( missing"));
+                            return null;
+                        }
+
+                        nextToken();
+                        stm.setCondition(parseExpression(PrecedenceList.LOWEST));
+
+                        if (!expectPeek(TokenList.PAREN_CLOSE)) {
+                            errors.addElement(new ParserError("Missing Symbol", ") missing"));
+                            return null;
+                        }
+                        if (!expectPeek(TokenList.BRACE_OPEN)) {
+                            errors.addElement(new ParserError("Missing Symbol", "{ missing"));
+                            return null;
+                        }
+                        stm.setConsequence(parseBlockStatement());
+
+                        while (peekTokenIs(TokenList.ELIF)) {
+
+                            nextToken();
+                            ElifExpression exp = new ElifExpression(curr);
+                            if (!expectPeek(TokenList.PAREN_OPEN)) {
+                                errors.addElement(new ParserError("Missing Symbol", "( missing"));
+                                return null;
+                            }
+
+                            nextToken();
+                            exp.setCondition(parseExpression(PrecedenceList.LOWEST));
+                            if (!expectPeek(TokenList.PAREN_CLOSE)) {
+                                errors.addElement(new ParserError("Missing Symbol", ") missing"));
+                                return null;
+                            }
+                            if (!expectPeek(TokenList.BRACE_OPEN)) {
+                                errors.addElement(new ParserError("Missing Symbol", "{ missing"));
+                                return null;
+                            }
+                            exp.setConsequence(parseBlockStatement());
+                            stm.addElifExpression(exp);
+                            debugger.log(exp.print("ELIF STATEMENT : "));
+                        }
+
+                        if (peekTokenIs(TokenList.ELSE)) {
+                            nextToken();
+                            if (!expectPeek(TokenList.BRACE_OPEN)) {
+                                errors.addElement(new ParserError("Missing Symbol", "{ missing"));
+                                return null;
+                            }
+                            stm.setAlternative(parseBlockStatement());
+                        }
+                        debugger.log(stm.print("IF STATEMENT : "));
+
+                        return stm;
+                    }
+                };
+        PrefixParser functionParser =
+                new PrefixParser() {
+                    @Override
+                    Expression parse() {
+                        FunctionLiteral fnt = new FunctionLiteral(curr);
+
+                        if (!expectPeek(TokenList.IDENTIFIER)) {
+                            errors.addElement(
+                                    new ParserError("Identifier missing", "Function needs a name"));
+                            return null;
+                        }
+                        fnt.setName(new Identifier(curr, curr.getTokenValue()));
+
+                        if (!expectPeek(TokenList.PAREN_OPEN)) {
+                            errors.addElement(new ParserError("Missing Symbol", "( missing"));
+                            return null;
+                        }
+                        fnt.addParameters(parseFunctionParameters());
+
+                        if (!expectPeek(TokenList.BRACE_OPEN)) {
+                            errors.addElement(new ParserError("Missing Symbol", "{ missing"));
+                            return null;
+                        }
+                        fnt.addBody(parseBlockStatement());
+                        debugger.log(fnt.print("Function : "));
+                        return fnt;
+                    }
+                };
+
+        PrefixParser stringParser =
+                new PrefixParser() {
+                    @Override
+                    Expression parse() {
+                        return new StringLiteral(curr, curr.getTokenValue());
+                    }
+                };
+
+        PrefixParser arrayParser =
+                new PrefixParser() {
+                    @Override
+                    Expression parse() {
+                        return new ArrayLiteral(
+                                curr, parseExpressionList(TokenList.SQUARE_BRACKET_CLOSE));
+                    }
+                };
+
+        PrefixParser hashLiteralParser =
+                new PrefixParser() {
+                    @Override
+                    Expression parse() {
+                        HashLiteral hash =
+                                new HashLiteral(curr, new HashMap<Expression, Expression>());
+
+                        while (!peekTokenIs(TokenList.BRACE_CLOSE)) {
+                            nextToken();
+                            Expression key = parseExpression(PrecedenceList.LOWEST);
+
+                            if (!expectPeek(TokenList.COLON)) {
+                                errors.addElement(new ParserError("Missing Symbol", ": missing"));
+                                return null;
+                            }
+                            nextToken();
+                            Expression value = parseExpression(PrecedenceList.LOWEST);
+
+                            hash.addElement(key, value);
+
+                            if (!peekTokenIs(TokenList.BRACE_CLOSE)
+                                    && !expectPeek(TokenList.COMMA)) {
+                                errors.addElement(new ParserError("Missing Symbol", "}, missing"));
+                                return null;
+                            }
+                        }
+                        if (!expectPeek(TokenList.BRACE_CLOSE)) {
+                            errors.addElement(new ParserError("Missing Symbol", "} missing"));
+                            return null;
+                        }
+
+                        return hash;
+                    }
+                };
 
         this.registerPrefixParser((TokenList.IDENTIFIER), idenParser);
         this.registerPrefixParser((TokenList.INT), integerParser);
@@ -237,69 +275,74 @@ public class Parser {
         this.registerPrefixParser((TokenList.FUNCTION), functionParser);
         this.registerPrefixParser((TokenList.STRING), stringParser);
 
-        InfixParser infixParser = new InfixParser() {
-            @Override
-            Expression parse(Expression left) {
-                InfixExpression exp = new InfixExpression(curr, curr.getTokenValue(), left);
+        InfixParser infixParser =
+                new InfixParser() {
+                    @Override
+                    Expression parse(Expression left) {
+                        InfixExpression exp = new InfixExpression(curr, curr.getTokenValue(), left);
 
-                int precedence = currPrecedence();
-                nextToken();
-                exp.setRight(parseExpression(precedence));
+                        int precedence = currPrecedence();
+                        nextToken();
+                        exp.setRight(parseExpression(precedence));
 
-                return exp;
-            }
-        };
+                        return exp;
+                    }
+                };
 
-        InfixParser dotParser = new InfixParser() {
-            @Override
-            Expression parse(Expression left) {
-                DotExpression exp = new DotExpression(curr, left);
+        InfixParser dotParser =
+                new InfixParser() {
+                    @Override
+                    Expression parse(Expression left) {
+                        DotExpression exp = new DotExpression(curr, left);
 
-                int precedence = currPrecedence();
-                nextToken();
-                Expression right = parseExpression(precedence);
-                System.out.println(precedence);
-                right.print("Right Dot:");
-                exp.setRight(right);
+                        int precedence = currPrecedence();
+                        nextToken();
+                        Expression right = parseExpression(precedence);
+                        System.out.println(precedence);
+                        right.print("Right Dot:");
+                        exp.setRight(right);
 
-                return exp;
-            }
-        };
+                        return exp;
+                    }
+                };
 
-        InfixParser callExpressionParser = new InfixParser() {
-            @Override
-            Expression parse(Expression function) {
+        InfixParser callExpressionParser =
+                new InfixParser() {
+                    @Override
+                    Expression parse(Expression function) {
 
-                System.out.println("FUNCTION : " + function);
-                CallExpression exp;
-                if (function == null) {
-                    exp = new CallExpression(
-                            curr,
-                            new Identifier(new Token("test", "test"), "test"));
-                } else {
-                    exp = new CallExpression(curr, function);
-                }
-                exp.addArguments(parseExpressionList(TokenList.PAREN_CLOSE));
-                debugger.log(exp.print("Call Exp: "));
-                return exp;
-            }
-        };
+                        System.out.println("FUNCTION : " + function);
+                        CallExpression exp;
+                        if (function == null) {
+                            exp =
+                                    new CallExpression(
+                                            curr,
+                                            new Identifier(new Token("test", "test"), "test"));
+                        } else {
+                            exp = new CallExpression(curr, function);
+                        }
+                        exp.addArguments(parseExpressionList(TokenList.PAREN_CLOSE));
+                        debugger.log(exp.print("Call Exp: "));
+                        return exp;
+                    }
+                };
 
-        InfixParser indexExpressionParser = new InfixParser() {
-            @Override
-            Expression parse(Expression left) {
-                IndexExpression exp = new IndexExpression(curr, left);
+        InfixParser indexExpressionParser =
+                new InfixParser() {
+                    @Override
+                    Expression parse(Expression left) {
+                        IndexExpression exp = new IndexExpression(curr, left);
 
-                nextToken();
-                exp.setIndex(parseExpression(PrecedenceList.LOWEST));
+                        nextToken();
+                        exp.setIndex(parseExpression(PrecedenceList.LOWEST));
 
-                if (!expectPeek(TokenList.SQUARE_BRACKET_CLOSE)) {
-                    errors.addElement(new ParserError("Missing Symbol", "] missing"));
-                    return null;
-                }
-                return exp;
-            }
-        };
+                        if (!expectPeek(TokenList.SQUARE_BRACKET_CLOSE)) {
+                            errors.addElement(new ParserError("Missing Symbol", "] missing"));
+                            return null;
+                        }
+                        return exp;
+                    }
+                };
 
         this.registerInfixParser((TokenList.PLUS), infixParser);
         this.registerInfixParser((TokenList.MINUS), infixParser);
@@ -385,7 +428,6 @@ public class Parser {
     }
 
     Statement parseStatement() {
-        System.out.println("PARSING");
         // NOTE: Properly implement the '=' parsing (It has some off by one bug)
         switch (this.curr.getType()) {
             case TokenList.LET:
@@ -403,7 +445,6 @@ public class Parser {
     }
 
     Statement parseIdentifierStatement() {
-        System.out.println("PARSING");
         // NOTE: MAYBE BUGGY?????
         if (this.peekTokenIs(TokenList.ASSIGN)) {
             return this.parseAssignmentStatement();
@@ -455,21 +496,16 @@ public class Parser {
     }
 
     ExpressionStatement parseExpressionStatement() {
-        System.out.println("PARSING");
-        ExpressionStatement smt = new ExpressionStatement(this.curr, this.parseExpression(PrecedenceList.LOWEST));
+        ExpressionStatement smt =
+                new ExpressionStatement(this.curr, this.parseExpression(PrecedenceList.LOWEST));
 
-        if (!this.peekTokenIs(TokenList.SEMICOLON)) {
-            errors.addElement(new ParserError("Missing Symbol", "; Missing"));
-            return null;
-        }
-        this.nextToken();
+        if (this.peekTokenIs(TokenList.SEMICOLON)) this.nextToken();
+
         this.debugger.log(smt.print("Exp Stm: "));
-
         return smt;
     }
 
     Expression parseExpression(int precedence) {
-        System.out.println("PARSING");
 
         if (!this.prefixParsers.containsKey(this.curr.getType())) {
             this.errors.addElement(
@@ -479,13 +515,13 @@ public class Parser {
 
         PrefixParser prefix = this.prefixParsers.get(this.curr.getType());
         Expression leftExp = prefix.parse();
-        if (leftExp != null)
-            this.debugger.log(leftExp.print("Left Exp: "));
+        if (leftExp != null) this.debugger.log(leftExp.print("Left Exp: "));
 
         while (!this.peekTokenIs(TokenList.SEMICOLON) && precedence < this.peekPrecedence()) {
-
+            debugger.log("Are we here even if we should not be here?");
             if (this.infixParsers.containsKey(this.peek.getType())) {
 
+                debugger.log("Are we here even if we should not be here?");
                 InfixParser infix = this.infixParsers.get(this.peek.getType());
                 this.nextToken();
                 leftExp = infix.parse(leftExp);
@@ -574,6 +610,7 @@ public class Parser {
         this.nextToken();
 
         while (!(this.currTokenIs(TokenList.BRACE_CLOSE) || this.currTokenIs(TokenList.EOF))) {
+            debugger.log("PArsing Bloack expression");
             Statement stm = this.parseStatement();
             if (stm != null) {
                 block.addStatement(stm);
@@ -614,7 +651,6 @@ public class Parser {
         // this.tokens.getLast().printToken();
 
         while (this.peek != null) {
-            System.out.println("PARSING");
             // this.curr.printToken();
             Statement stm = this.parseStatement();
             if (stm != null) {
@@ -623,10 +659,8 @@ public class Parser {
             this.nextToken();
         }
 
-        if (this.program.size() > 0)
-            return this.program;
-        else
-            this.errors.add(new ParserError("", "Unable to parse program"));
+        if (this.program.size() > 0) return this.program;
+        else this.errors.add(new ParserError("", "Unable to parse program"));
         return null;
     }
 
