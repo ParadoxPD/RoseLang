@@ -1,5 +1,6 @@
 package org.code.utils;
 
+import java.lang.reflect.Array;
 import java.util.Vector;
 
 public class Helper {
@@ -19,13 +20,21 @@ public class Helper {
             outBytes.add(val);
         }
         return outBytes;
-
     }
 
-    public static Vector<Byte> slice(Vector<Byte> list, int start, int end) {
-        Vector<Byte> res = new Vector<>();
+    public static <T> Vector<T> slice(Vector<T> list, int start, int end) {
+        Vector<T> res = new Vector<>();
         for (int i = start; i < end; i++) {
             res.add(list.get(i));
+        }
+        return res;
+    }
+
+    public static <T> T[] slice(T[] list, int start, int end, Class<T> clazz) {
+        @SuppressWarnings("unchecked")
+        T[] res = (T[]) Array.newInstance(clazz, end - start);
+        for (int i = start; i < end; i++) {
+            res[i - start] = list[i];
         }
         return res;
     }

@@ -17,26 +17,45 @@ public class VM {
 
     public static final int StackSize = 2048;
     public static final int GlobalsSize = 65536;
+    public static final int MaxFrames = 1024;
 
     Vector<Object_T> constants;
-    Vector<Byte> instructions;
 
     Vector<Object_T> stack;
     Vector<Object_T> globals;
     int sp;
 
-    public VM(ByteCode bytecode) {
-        this.instructions = bytecode.getInstructions();
-        this.constants = bytecode.getConstants();
+    Vector<Frame> frames;
+    int frameIndex;
 
+    public VM(ByteCode bytecode) {
+
+        this.frames = new Vector<Frame>(MaxFrames);
+        this.frames.add(new Frame(new Compiled_Function_T(bytecode.getInstructions())));
+        this.constants = bytecode.getConstants();
         this.stack = new Vector<Object_T>(StackSize);
         this.globals = new Vector<Object_T>(GlobalsSize);
         this.sp = 0;
+        this.frameIndex = 1;
     }
 
     public VM(ByteCode bytecode, Vector<Object_T> globals) {
         this(bytecode);
         this.globals = globals;
+    }
+
+    public Frame currentFrame() {
+        return this.frames.get(this.frameIndex - 1);
+    }
+
+    public void pushFrame(Frame f) {
+        this.frames.add(f);
+        this.frameIndex++;
+    }
+
+    public Frame popFrame() {
+        this.frameIndex--;
+        return this.frames.get(this.frameIndex);
     }
 
     public Object_T stackTop() {
@@ -48,16 +67,23 @@ public class VM {
     }
 
     public VMError run() {
+        int insPointer;
+        Vector<Byte> ins;
+        byte op;
         VMError err = null;
-        for (int insPointer = 0; insPointer < this.instructions.size(); insPointer++) {
-            byte op = this.instructions.get(insPointer);
+
+        while (this.currentFrame().insPointer < this.currentFrame().instructions().size() - 1) {
+            this.currentFrame().insPointer++;
+
+            insPointer = this.currentFrame().insPointer;
+            ins = this.currentFrame().instructions();
+            op = ins.get(insPointer);
+
             System.out.println("Operator : " + op);
             switch (op) {
                 case OpCodes.OpConstant:
-                    int constIndex =
-                            Code.readUint16(
-                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
-                    insPointer += 2;
+                    int constIndex = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 2;
                     err = this.push(this.constants.get(constIndex));
                     if (err != null) {
                         return err;
@@ -123,36 +149,29 @@ public class VM {
                     this.pop();
                     break;
                 case OpCodes.OpJump:
-                    int pos =
-                            Code.readUint16(
-                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
-                    insPointer = pos - 1;
+                    int pos = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer = pos - 1;
                     break;
                 case OpCodes.OpJumpNotTruthy:
-                    pos =
-                            Code.readUint16(
-                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
-                    insPointer += 2;
+                    pos = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 2;
 
                     Object_T condition = this.pop();
                     if (!this.isTruth(condition)) {
-                        insPointer = pos - 1;
+                        this.currentFrame().insPointer = pos - 1;
                     }
                     break;
                 case OpCodes.OpSetGlobal:
                     int globalIndex =
-                            Code.readUint16(
-                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
-                    insPointer += 2;
+                            Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 2;
                     if (this.globals.size() <= globalIndex)
                         this.globals.add(globalIndex, this.pop());
                     else this.globals.set(globalIndex, this.pop());
                     break;
                 case OpCodes.OpGetGlobal:
-                    globalIndex =
-                            Code.readUint16(
-                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
-                    insPointer += 2;
+                    globalIndex = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 2;
                     err = this.push(this.globals.get(globalIndex));
                     if (err != null) {
                         return err;
@@ -161,9 +180,8 @@ public class VM {
 
                 case OpCodes.OpArray:
                     int numElements =
-                            Code.readUint16(
-                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
-                    insPointer += 2;
+                            Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 2;
                     Object_T array = this.buildArray(this.sp - numElements, this.sp);
                     this.sp = this.sp - numElements;
                     err = this.push(array);
@@ -172,10 +190,8 @@ public class VM {
                     }
                     break;
                 case OpCodes.OpHash:
-                    numElements =
-                            Code.readUint16(
-                                    Helper.vectorToByteArray(this.instructions), insPointer + 1);
-                    insPointer += 2;
+                    numElements = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 2;
                     Object_T hash = this.buildHash(this.sp - numElements, this.sp);
                     if (hash == null) {
                         return new VMError("", "Key is not hashable");
@@ -236,11 +252,11 @@ public class VM {
     }
 
     Array_T buildArray(int start, int end) {
-        Vector<Object_T> elems = new Vector<Object_T>();
-        for (int i = start; i < end; i++) {
-            elems.add(this.stack.get(i));
-        }
-        return new Array_T(elems);
+        // Vector<Object_T> elems = new Vector<Object_T>();
+        // for (int i = start; i < end; i++) {
+        //  elems.add(this.stack.get(i));
+        // }
+        return new Array_T(Helper.slice(this.stack, start, end));
     }
 
     Hash_T buildHash(int start, int end) {
