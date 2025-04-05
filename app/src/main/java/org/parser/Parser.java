@@ -180,34 +180,35 @@ public class Parser {
                         return stm;
                     }
                 };
-        PrefixParser functionParser =
-                new PrefixParser() {
-                    @Override
-                    Expression parse() {
-                        FunctionLiteral fnt = new FunctionLiteral(curr);
+        // PrefixParser functionParser =
+        //        new PrefixParser() {
+        //            @Override
+        //            Expression parse() {
+        //                FunctionLiteral fnt = new FunctionLiteral(curr);
 
-                        if (!expectPeek(TokenList.IDENTIFIER)) {
-                            errors.addElement(
-                                    new ParserError("Identifier missing", "Function needs a name"));
-                            return null;
-                        }
-                        fnt.setName(new Identifier(curr, curr.getTokenValue()));
+        //                if (!expectPeek(TokenList.IDENTIFIER)) {
+        //                    errors.addElement(
+        //                            new ParserError("Identifier missing", "Function needs a
+        // name"));
+        //                    return null;
+        //                }
+        //                fnt.setName(new Identifier(curr, curr.getTokenValue()));
 
-                        if (!expectPeek(TokenList.PAREN_OPEN)) {
-                            errors.addElement(new ParserError("Missing Symbol", "( missing"));
-                            return null;
-                        }
-                        fnt.addParameters(parseFunctionParameters());
+        //                if (!expectPeek(TokenList.PAREN_OPEN)) {
+        //                    errors.addElement(new ParserError("Missing Symbol", "( missing"));
+        //                    return null;
+        //                }
+        //                fnt.addParameters(parseFunctionParameters());
 
-                        if (!expectPeek(TokenList.BRACE_OPEN)) {
-                            errors.addElement(new ParserError("Missing Symbol", "{ missing"));
-                            return null;
-                        }
-                        fnt.addBody(parseBlockStatement());
-                        debugger.log(fnt.print("Function : "));
-                        return fnt;
-                    }
-                };
+        //                if (!expectPeek(TokenList.BRACE_OPEN)) {
+        //                    errors.addElement(new ParserError("Missing Symbol", "{ missing"));
+        //                    return null;
+        //                }
+        //                fnt.addBody(parseBlockStatement());
+        //                debugger.log(fnt.print("Function : "));
+        //                return fnt;
+        //            }
+        //        };
 
         PrefixParser stringParser =
                 new PrefixParser() {
@@ -272,7 +273,7 @@ public class Parser {
         this.registerPrefixParser((TokenList.BRACE_OPEN), hashLiteralParser);
         this.registerPrefixParser((TokenList.SQUARE_BRACKET_OPEN), arrayParser);
         this.registerPrefixParser((TokenList.IF), ifExpressionParser);
-        this.registerPrefixParser((TokenList.FUNCTION), functionParser);
+        // this.registerPrefixParser((TokenList.FUNCTION), functionParser);
         this.registerPrefixParser((TokenList.STRING), stringParser);
 
         InfixParser infixParser =
@@ -436,12 +437,38 @@ public class Parser {
                 return this.parseReturnStatement();
             case TokenList.WHILE:
                 return this.parseWhileStatement();
+            case TokenList.FUNCTION:
+                return this.parseFunction();
 
             case TokenList.IDENTIFIER:
                 return this.parseIdentifierStatement();
             default:
                 return this.parseExpressionStatement();
         }
+    }
+
+    Statement parseFunction() {
+        FunctionLiteral fnt = new FunctionLiteral(curr);
+
+        if (!expectPeek(TokenList.IDENTIFIER)) {
+            errors.addElement(new ParserError("Identifier missing", "Function needs a name"));
+            return null;
+        }
+        fnt.setName(new Identifier(curr, curr.getTokenValue()));
+
+        if (!expectPeek(TokenList.PAREN_OPEN)) {
+            errors.addElement(new ParserError("Missing Symbol", "( missing"));
+            return null;
+        }
+        fnt.addParameters(parseFunctionParameters());
+
+        if (!expectPeek(TokenList.BRACE_OPEN)) {
+            errors.addElement(new ParserError("Missing Symbol", "{ missing"));
+            return null;
+        }
+        fnt.addBody(parseBlockStatement());
+        debugger.log(fnt.print("Function : "));
+        return fnt;
     }
 
     Statement parseIdentifierStatement() {

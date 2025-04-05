@@ -79,7 +79,7 @@ public class VM {
             ins = this.currentFrame().instructions();
             op = ins.get(insPointer);
 
-            System.out.println("Operator : " + op);
+            System.out.println("Operator : " + OpCodes.Definitions.get(op).name);
             switch (op) {
                 case OpCodes.OpConstant:
                     int constIndex = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
@@ -207,6 +207,33 @@ public class VM {
                     Object_T left = this.pop();
 
                     err = this.executeIndexExpression(left, index);
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
+                case OpCodes.OpCall:
+                    Object_T fn = this.stack.get(this.sp - 1);
+                    if (fn instanceof Compiled_Function_T) {
+                        Frame frame = new Frame((Compiled_Function_T) fn);
+                        this.pushFrame(frame);
+                    } else {
+                        return new VMError("", "Calling non function");
+                    }
+                    break;
+                case OpCodes.OpReturnValue:
+                    Object_T returnValue = this.pop();
+                    this.popFrame();
+                    this.pop();
+                    err = this.push(returnValue);
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
+                case OpCodes.OpReturn:
+                    this.popFrame();
+                    this.pop();
+
+                    err = this.push(Constants.NULL);
                     if (err != null) {
                         return err;
                     }

@@ -61,6 +61,8 @@ public class Compiler {
                 return null;
 
             case ExpressionStatement es:
+                System.out.println(
+                        "Are we here ? EXPRESSION STATEMETN" + es.getExpression().print(""));
                 err = this.compile(es.getExpression());
                 if (err != null) {
                     return err;
@@ -254,6 +256,8 @@ public class Compiler {
                 this.emit(OpCodes.OpIndex);
                 return null;
             case CallExpression ce:
+                System.out.println("calling");
+                System.out.println(ce.getFunction().print("FUCNTON : "));
                 err = this.compile(ce.getFunction());
                 if (err != null) {
                     return err;
@@ -323,6 +327,14 @@ public class Compiler {
 
                 return null;
             case FunctionLiteral fl:
+                System.out.println("AAAAAAAfg");
+
+                symbol = this.symbolTable.resolve(fl.getName().getValue());
+                if (symbol != null) {
+                    return new CompilerError(
+                            "", "Function already exists : " + fl.getName().getValue());
+                }
+
                 this.enterScope();
                 err = this.compile(fl.getBody());
                 if (err != null) {
@@ -337,6 +349,10 @@ public class Compiler {
                 Vector<Byte> instructions = this.leaveScope();
                 Compiled_Function_T function = new Compiled_Function_T(instructions);
                 this.emit(OpCodes.OpConstant, this.addConstant(function));
+
+                symbol = this.symbolTable.define(fl.getName().getValue());
+                this.emit(OpCodes.OpSetGlobal, symbol.index);
+
                 return null;
             default:
                 return new CompilerError("", "Unsupported Type : " + node.getClass());
