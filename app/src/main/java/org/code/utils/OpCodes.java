@@ -42,6 +42,9 @@ public interface OpCodes {
     byte OpReturnValue = 25;
     byte OpReturn = 26;
 
+    byte OpGetLocal = 27;
+    byte OpSetLocal = 28;
+
     Map<Byte, Definition> Definitions =
             Map.ofEntries(
                     new AbstractMap.SimpleEntry<Byte, Definition>(
@@ -93,9 +96,13 @@ public interface OpCodes {
                     new AbstractMap.SimpleEntry<Byte, Definition>(
                             OpCodes.OpIndex, new Definition("OpIndex", new int[] {})),
                     new AbstractMap.SimpleEntry<Byte, Definition>(
-                            OpCodes.OpCall, new Definition("OpCall", new int[] {})),
+                            OpCodes.OpCall, new Definition("OpCall", new int[] {1})),
                     new AbstractMap.SimpleEntry<Byte, Definition>(
                             OpCodes.OpReturnValue, new Definition("OpReturnValue", new int[] {})),
                     new AbstractMap.SimpleEntry<Byte, Definition>(
-                            OpCodes.OpReturn, new Definition("OpReturn", new int[] {})));
+                            OpCodes.OpReturn, new Definition("OpReturn", new int[] {})),
+                    new AbstractMap.SimpleEntry<Byte, Definition>(
+                            OpCodes.OpGetLocal, new Definition("OpGetLocal", new int[] {1})),
+                    new AbstractMap.SimpleEntry<Byte, Definition>(
+                            OpCodes.OpSetLocal, new Definition("OpSetLocal", new int[] {1})));
 }

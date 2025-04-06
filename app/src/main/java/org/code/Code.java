@@ -1,12 +1,12 @@
 package org.code;
 
-import java.util.Vector;
 import org.code.utils.*;
+
+import java.util.Vector;
 
 public class Code {
 
-    public Code() {
-    }
+    public Code() {}
 
     static Definition lookUp(byte op) {
         Definition def = OpCodes.Definitions.get(op);
@@ -15,7 +15,6 @@ public class Code {
         }
 
         return def;
-
     }
 
     public static byte[] make(byte op, int... operands) {
@@ -40,8 +39,10 @@ public class Code {
 
                     // NOTE: Something i came up with, no idea if it works or not but have to test
                     // it latere
-                    Binary.putUint16(instruction, (short) operands[i], offset);
+                    Binary.putUint16(instruction, (byte) operands[i], offset);
                     break;
+                case 1:
+                    instruction[offset] = (byte) operands[i];
             }
             offset += width;
         }
@@ -55,7 +56,10 @@ public class Code {
         for (int i = 0; i < def.operandWidth.length; i++) {
             switch (def.operandWidth[i]) {
                 case 2:
-                    operands[i] = readUint16(Helper.vectorToByteArray(ins), offset + offset1);
+                    operands[i] = Code.readUint16(Helper.vectorToByteArray(ins), offset + offset1);
+                    break;
+                case 1:
+                    operands[i] = Code.readUint8(Helper.vectorToByteArray(ins), offset + offset1);
                     break;
             }
             offset += def.operandWidth[i];
@@ -65,6 +69,10 @@ public class Code {
 
     public static int readUint16(byte[] ins, int offset) {
         return Binary.readUint16(ins, offset);
+    }
+
+    public static int readUint8(byte[] ins, int offset) {
+        return Binary.readUint8(ins, offset);
     }
 
     public static String toString(Vector<Byte> ins) {
@@ -97,7 +105,6 @@ public class Code {
         }
         return "ERROR: Unhandled operand Count";
     }
-
 }
 
 class Something {

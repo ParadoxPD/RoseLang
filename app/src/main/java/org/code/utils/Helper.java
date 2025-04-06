@@ -1,7 +1,7 @@
 package org.code.utils;
 
 import java.lang.reflect.Array;
-import java.util.Vector;
+import java.util.*;
 
 public class Helper {
 
@@ -23,7 +23,7 @@ public class Helper {
     }
 
     public static <T> Vector<T> slice(Vector<T> list, int start, int end) {
-        Vector<T> res = new Vector<>();
+        Vector<T> res = Helper.createVector();
         for (int i = start; i < end; i++) {
             res.add(list.get(i));
         }
@@ -37,5 +37,13 @@ public class Helper {
             res[i - start] = list[i];
         }
         return res;
+    }
+
+    public static <T> Vector<T> createVector(int size, T defaultValue) {
+        return new Vector<T>(Collections.nCopies(size, defaultValue));
+    }
+
+    public static <T> Vector<T> createVector() {
+        return new Vector<T>();
     }
 }

@@ -82,21 +82,23 @@ public class Compiler {
                 if (err != null) {
                     return err;
                 }
-                Symbol symbol = this.symbolTable.resolve(ls.getName().getValue());
+                Symbol symbol = this.symbolTable.resolveWithinScope(ls.getName().getValue());
                 if (symbol != null) {
                     return new CompilerError(
                             "", "Variable already exists : " + ls.getName().getValue());
                 }
 
                 symbol = this.symbolTable.define(ls.getName().getValue());
-                this.emit(OpCodes.OpSetGlobal, symbol.index);
+                if (symbol.scope.equals(Scopes.GlobalScope))
+                    this.emit(OpCodes.OpSetGlobal, symbol.index);
+                else this.emit(OpCodes.OpSetLocal, symbol.index);
                 return null;
             case AssignmentStatement as:
                 err = this.compile(as.getExpression());
                 if (err != null) {
                     return err;
                 }
-                symbol = this.symbolTable.resolve(as.getName().getValue());
+                symbol = this.symbolTable.resolveWithinScope(as.getName().getValue());
                 if (symbol == null) {
                     return new CompilerError(
                             "", "Variable does not exist : " + as.getName().getValue());
@@ -262,7 +264,14 @@ public class Compiler {
                 if (err != null) {
                     return err;
                 }
-                this.emit(OpCodes.OpCall);
+                for (Expression arg : ce.getArguments()) {
+                    err = this.compile(arg);
+                    if (err != null) {
+                        return err;
+                    }
+                }
+                System.out.println("Arguments : " + ce.getArguments().size());
+                this.emit(OpCodes.OpCall, ce.getArguments().size());
                 return null;
             case DotExpression de:
                 if (de.getRight() instanceof CallExpression) {
@@ -273,7 +282,14 @@ public class Compiler {
                     if (err != null) {
                         return err;
                     }
-                    this.emit(OpCodes.OpCall);
+                    for (Expression arg : c.getArguments()) {
+                        err = this.compile(arg);
+                        if (err != null) {
+                            return err;
+                        }
+                    }
+
+                    this.emit(OpCodes.OpCall, c.getArguments().size());
                     return null;
 
                 } else {
@@ -285,7 +301,10 @@ public class Compiler {
                 if (symbol == null) {
                     return new CompilerError("", "Variable does not exist : " + id.getValue());
                 }
-                this.emit(OpCodes.OpGetGlobal, symbol.index);
+                if (symbol.scope.equals(Scopes.GlobalScope))
+                    this.emit(OpCodes.OpGetGlobal, symbol.index);
+                else this.emit(OpCodes.OpGetLocal, symbol.index);
+
                 return null;
             case IntegerLiteral il:
                 Integer_T integer = new Integer_T(il.getValue());
@@ -336,6 +355,9 @@ public class Compiler {
                 }
 
                 this.enterScope();
+                for (Expression param : fl.getParameters()) {
+                    this.symbolTable.define(param.getTokenValue());
+                }
                 err = this.compile(fl.getBody());
                 if (err != null) {
                     return err;
@@ -346,12 +368,16 @@ public class Compiler {
                 if (!this.lastInstructionIs(OpCodes.OpReturnValue)) {
                     this.emit(OpCodes.OpReturn);
                 }
+                int numLocals = this.symbolTable.numDefinitions;
                 Vector<Byte> instructions = this.leaveScope();
-                Compiled_Function_T function = new Compiled_Function_T(instructions);
+                Compiled_Function_T function =
+                        new Compiled_Function_T(instructions, numLocals, fl.getParameters().size());
                 this.emit(OpCodes.OpConstant, this.addConstant(function));
 
                 symbol = this.symbolTable.define(fl.getName().getValue());
-                this.emit(OpCodes.OpSetGlobal, symbol.index);
+                if (symbol.scope.equals(Scopes.GlobalScope))
+                    this.emit(OpCodes.OpSetGlobal, symbol.index);
+                else this.emit(OpCodes.OpSetLocal, symbol.index);
 
                 return null;
             default:
@@ -429,6 +455,7 @@ public class Compiler {
     void enterScope() {
         this.scopes.add(new CompilationScope());
         this.scopeIndex++;
+        this.symbolTable = new SymbolTable(this.symbolTable);
     }
 
     Vector<Byte> leaveScope() {
@@ -436,6 +463,7 @@ public class Compiler {
 
         this.scopes.removeLast();
         this.scopeIndex--;
+        this.symbolTable = this.symbolTable.outer;
         return ins;
     }
 }

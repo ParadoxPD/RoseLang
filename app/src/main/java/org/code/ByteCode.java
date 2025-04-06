@@ -1,8 +1,8 @@
-package org.compiler;
-
-import java.util.Vector;
+package org.code;
 
 import org.typesystem.Object_T;
+
+import java.util.Vector;
 
 public class ByteCode {
     Vector<Byte> instructions;
@@ -20,5 +20,4 @@ public class ByteCode {
     public Vector<Object_T> getConstants() {
         return this.constants;
     }
-
 }

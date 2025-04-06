@@ -9,6 +9,10 @@ public class Binary {
     }
 
     public static int readUint16(byte[] ins, int offset) {
-        return (int) ((ins[0 + offset] << 8) + ins[1 + offset]);
+        return (int) ((ins[offset] << 8) + ins[1 + offset]);
+    }
+
+    public static int readUint8(byte[] ins, int offset) {
+        return (int) (ins[offset]);
     }
 }

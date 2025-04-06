@@ -7,10 +7,7 @@ import org.error.*;
 import org.typesystem.*;
 import org.typesystem.utils.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 /** VM */
 public class VM {
@@ -30,11 +27,13 @@ public class VM {
 
     public VM(ByteCode bytecode) {
 
-        this.frames = new Vector<Frame>(MaxFrames);
-        this.frames.add(new Frame(new Compiled_Function_T(bytecode.getInstructions())));
+        this.frames = Helper.<Frame>createVector(MaxFrames, null);
+        this.frames.set(0, new Frame(new Compiled_Function_T(bytecode.getInstructions()), 0));
         this.constants = bytecode.getConstants();
-        this.stack = new Vector<Object_T>(StackSize);
-        this.globals = new Vector<Object_T>(GlobalsSize);
+        this.stack = Helper.<Object_T>createVector(StackSize, null);
+        this.globals = Helper.<Object_T>createVector(GlobalsSize, null);
+        // System.out.println(this.globals.getClass());
+        // System.exit(0);
         this.sp = 0;
         this.frameIndex = 1;
     }
@@ -49,8 +48,8 @@ public class VM {
     }
 
     public void pushFrame(Frame f) {
-        this.frames.add(f);
-        this.frameIndex++;
+        this.frames.set(this.frameIndex++, f);
+        // this.frameIndex++;
     }
 
     public Frame popFrame() {
@@ -78,6 +77,7 @@ public class VM {
             insPointer = this.currentFrame().insPointer;
             ins = this.currentFrame().instructions();
             op = ins.get(insPointer);
+            // System.out.println(op);
 
             System.out.println("Operator : " + OpCodes.Definitions.get(op).name);
             switch (op) {
@@ -165,14 +165,27 @@ public class VM {
                     int globalIndex =
                             Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
                     this.currentFrame().insPointer += 2;
-                    if (this.globals.size() <= globalIndex)
-                        this.globals.add(globalIndex, this.pop());
-                    else this.globals.set(globalIndex, this.pop());
+                    this.globals.set(globalIndex, this.pop());
                     break;
                 case OpCodes.OpGetGlobal:
                     globalIndex = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
                     this.currentFrame().insPointer += 2;
                     err = this.push(this.globals.get(globalIndex));
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
+                case OpCodes.OpSetLocal:
+                    int localIndex = Code.readUint8(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 1;
+                    Frame frame = this.currentFrame();
+                    this.stack.set(frame.basePointer + localIndex, this.pop());
+                    break;
+                case OpCodes.OpGetLocal:
+                    localIndex = Code.readUint8(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 1;
+                    frame = this.currentFrame();
+                    err = this.push(this.stack.get(frame.basePointer + localIndex));
                     if (err != null) {
                         return err;
                     }
@@ -212,26 +225,27 @@ public class VM {
                     }
                     break;
                 case OpCodes.OpCall:
-                    Object_T fn = this.stack.get(this.sp - 1);
-                    if (fn instanceof Compiled_Function_T) {
-                        Frame frame = new Frame((Compiled_Function_T) fn);
-                        this.pushFrame(frame);
-                    } else {
-                        return new VMError("", "Calling non function");
+                    int numArgs = Code.readUint8(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 1;
+
+                    err = this.callFunction(numArgs);
+                    if (err != null) {
+                        return err;
                     }
                     break;
                 case OpCodes.OpReturnValue:
                     Object_T returnValue = this.pop();
-                    this.popFrame();
-                    this.pop();
+                    frame = this.popFrame();
+                    this.sp = frame.basePointer - 1;
+
                     err = this.push(returnValue);
                     if (err != null) {
                         return err;
                     }
                     break;
                 case OpCodes.OpReturn:
-                    this.popFrame();
-                    this.pop();
+                    frame = this.popFrame();
+                    this.sp = frame.basePointer - 1;
 
                     err = this.push(Constants.NULL);
                     if (err != null) {
@@ -243,6 +257,29 @@ public class VM {
             }
         }
         return err;
+    }
+
+    VMError callFunction(int numArgs) {
+        Object_T obj = this.stack.get(this.sp - 1 - numArgs);
+        if (obj instanceof Compiled_Function_T) {
+            Compiled_Function_T fn = (Compiled_Function_T) obj;
+            if (numArgs != fn.getNumParameters()) {
+                return new VMError(
+                        "",
+                        "wrong number of arguments: want: "
+                                + fn.getNumParameters()
+                                + "got= "
+                                + numArgs);
+            }
+            Frame frame = new Frame(fn, this.sp - numArgs);
+            // System.out.println("Hello1");
+            this.pushFrame(frame);
+            // System.out.println("Hello2");
+            this.sp = frame.basePointer + fn.getNumLocals();
+        } else {
+            return new VMError("", "Calling non function");
+        }
+        return null;
     }
 
     VMError executeIndexExpression(Object_T left, Object_T index) {
@@ -560,7 +597,7 @@ public class VM {
         if (this.sp >= StackSize) {
             return new VMError("", "StackOverFlow");
         }
-        this.stack.add(this.sp, o);
+        this.stack.set(this.sp, o);
         this.sp++;
         return null;
     }

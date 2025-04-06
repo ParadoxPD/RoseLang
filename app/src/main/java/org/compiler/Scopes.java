@@ -1,9 +1,8 @@
 package org.compiler;
 
-/**
- * Scopes
- */
+/** Scopes */
 public interface Scopes {
 
     String GlobalScope = "GLOBAL";
+    String LocalScope = "LOCAL";
 }

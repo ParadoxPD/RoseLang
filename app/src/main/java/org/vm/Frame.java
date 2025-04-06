@@ -9,10 +9,12 @@ public class Frame {
 
     Compiled_Function_T fn;
     int insPointer;
+    int basePointer;
 
-    public Frame(Compiled_Function_T fn) {
+    public Frame(Compiled_Function_T fn, int basePointer) {
         this.fn = fn;
         this.insPointer = -1;
+        this.basePointer = basePointer;
     }
 
     public Vector<Byte> instructions() {
