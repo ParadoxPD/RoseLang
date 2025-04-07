@@ -102,6 +102,8 @@ public class Code {
                 return def.name;
             case 1:
                 return def.name + " " + operands[0];
+            case 2:
+                return def.name + " " + operands[0] + " " + operands[1];
         }
         return "ERROR: Unhandled operand Count";
     }

@@ -60,6 +60,19 @@ public class Compiler {
         }
     }
 
+    void setSymbol(Symbol s) {
+        switch (s.scope) {
+            case Scopes.GlobalScope:
+                this.emit(OpCodes.OpSetGlobal, s.index);
+                break;
+            case Scopes.LocalScope:
+                this.emit(OpCodes.OpSetLocal, s.index);
+                break;
+            default:
+                System.out.println("How did you get here ? Are you kidding me ? What did you do?");
+        }
+    }
+
     int addConstant(Object_T obj) {
         this.constants.add(obj);
         return this.constants.size() - 1;
@@ -394,14 +407,14 @@ public class Compiler {
                 }
                 int numLocals = this.symbolTable.numDefinitions;
                 Vector<Byte> instructions = this.leaveScope();
+
                 Compiled_Function_T function =
                         new Compiled_Function_T(instructions, numLocals, fl.getParameters().size());
-                this.emit(OpCodes.OpConstant, this.addConstant(function));
+                int fnIndex = this.addConstant(function);
+                this.emit(OpCodes.OpClosure, fnIndex, 0);
 
                 symbol = this.symbolTable.define(fl.getName().getValue());
-                if (symbol.scope.equals(Scopes.GlobalScope))
-                    this.emit(OpCodes.OpSetGlobal, symbol.index);
-                else this.emit(OpCodes.OpSetLocal, symbol.index);
+                this.setSymbol(symbol);
 
                 return null;
             default:

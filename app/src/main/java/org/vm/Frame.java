@@ -1,23 +1,23 @@
 package org.vm;
 
-import org.typesystem.Compiled_Function_T;
+import org.typesystem.Closure_T;
 
 import java.util.*;
 
 /** Frame */
 public class Frame {
 
-    Compiled_Function_T fn;
     int insPointer;
     int basePointer;
+    Closure_T closure;
 
-    public Frame(Compiled_Function_T fn, int basePointer) {
-        this.fn = fn;
+    public Frame(Closure_T closure, int basePointer) {
         this.insPointer = -1;
         this.basePointer = basePointer;
+        this.closure = closure;
     }
 
     public Vector<Byte> instructions() {
-        return this.fn.getInstructions();
+        return this.closure.getFunction().getInstructions();
     }
 }

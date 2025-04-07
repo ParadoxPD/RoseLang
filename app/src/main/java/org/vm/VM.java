@@ -30,7 +30,10 @@ public class VM {
     public VM(ByteCode bytecode) {
 
         this.frames = Helper.<Frame>createVector(MaxFrames, null);
-        this.frames.set(0, new Frame(new Compiled_Function_T(bytecode.getInstructions()), 0));
+        Compiled_Function_T mainFunc = new Compiled_Function_T(bytecode.getInstructions());
+        Closure_T mainClosure = new Closure_T(mainFunc);
+        Frame mainFrame = new Frame(mainClosure, 0);
+        this.frames.set(0, mainFrame);
         this.constants = bytecode.getConstants();
         this.stack = Helper.<Object_T>createVector(StackSize, null);
         this.globals = Helper.<Object_T>createVector(GlobalsSize, null);
@@ -52,6 +55,15 @@ public class VM {
 
     public void pushFrame(Frame f) {
         this.frames.set(this.frameIndex++, f);
+        // this.frameIndex++;
+    }
+
+    public VMError pushClosure(int index) {
+        Object_T constant = this.constants.get(index);
+        if (constant instanceof Compiled_Function_T) {
+            return this.push(new Closure_T((Compiled_Function_T) constant));
+        }
+        return new VMError("", "Not a Function : " + constant);
         // this.frameIndex++;
     }
 
@@ -268,6 +280,16 @@ public class VM {
                         return err;
                     }
                     break;
+                case OpCodes.OpClosure:
+                    constIndex = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
+                    int som = Code.readUint8(Helper.vectorToByteArray(ins), insPointer + 3);
+                    this.currentFrame().insPointer += 3;
+
+                    err = this.pushClosure(constIndex);
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
                 default:
                     return new VMError("", "Unsupported Operation : " + op);
             }
@@ -278,8 +300,8 @@ public class VM {
     VMError executeCall(int numArgs) {
         Object_T callee = this.stack.get(this.sp - 1 - numArgs);
         switch (callee) {
-            case Compiled_Function_T ct:
-                return this.callFunction(ct, numArgs);
+            case Closure_T cl:
+                return this.callClosure(cl, numArgs);
             case Builtin_Function_T bft:
                 return this.callBuiltin(bft, numArgs);
             default:
@@ -287,21 +309,19 @@ public class VM {
         }
     }
 
-    VMError callFunction(Compiled_Function_T fn, int numArgs) {
-
-        if (numArgs != fn.getNumParameters()) {
+    VMError callClosure(Closure_T cl, int numArgs) {
+        if (numArgs != cl.getFunction().getNumParameters()) {
             return new VMError(
                     "",
                     "wrong number of arguments: want: "
-                            + fn.getNumParameters()
+                            + cl.getFunction().getNumParameters()
                             + "got= "
                             + numArgs);
         }
-        Frame frame = new Frame(fn, this.sp - numArgs);
-        // System.out.println("Hello1");
+        Frame frame = new Frame(cl, this.sp - numArgs);
         this.pushFrame(frame);
-        // System.out.println("Hello2");
-        this.sp = frame.basePointer + fn.getNumLocals();
+        this.sp = frame.basePointer + cl.getFunction().getNumLocals();
+
         return null;
     }
 
