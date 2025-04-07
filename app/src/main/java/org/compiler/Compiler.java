@@ -60,15 +60,21 @@ public class Compiler {
             case Scopes.FreeScope:
                 this.emit(OpCodes.OpGetFree, s.index);
                 break;
+            case Scopes.GlobalFunctionScope:
+            case Scopes.LocalFunctionScope:
+                this.emit(OpCodes.OpCurrentClosure);
+                break;
         }
     }
 
     void setSymbol(Symbol s) {
         switch (s.scope) {
             case Scopes.GlobalScope:
+            case Scopes.GlobalFunctionScope:
                 this.emit(OpCodes.OpSetGlobal, s.index);
                 break;
             case Scopes.LocalScope:
+            case Scopes.LocalFunctionScope:
                 this.emit(OpCodes.OpSetLocal, s.index);
                 break;
             default:
@@ -111,12 +117,18 @@ public class Compiler {
                 this.emit(OpCodes.OpPop);
                 return null;
             case BlockStatement bs:
+                // this.enterScope();
                 for (Statement s : bs.getStatements()) {
                     err = this.compile(s);
                     if (err != null) {
                         return err;
                     }
                 }
+                // int numLocals = this.symbolTable.numDefinitions;
+
+                // Vector<Byte> instructions = this.leaveScope();
+
+                // this.emit(OpCodes.OpClosure, this.constants.size() - 1, 0);
                 return null;
             case LetStatement ls:
                 err = this.compile(ls.getValue());
@@ -137,12 +149,12 @@ public class Compiler {
                 if (err != null) {
                     return err;
                 }
-                symbol = this.symbolTable.resolveWithinScope(as.getName().getValue());
+                symbol = this.symbolTable.resolve(as.getName().getValue());
                 if (symbol == null) {
                     return new CompilerError(
                             "", "Variable does not exist : " + as.getName().getValue());
                 }
-                this.emit(OpCodes.OpSetGlobal, symbol.index);
+                this.setSymbol(symbol);
                 return err;
             case ReturnStatement rs:
                 err = this.compile(rs.getReturnValue());
@@ -393,7 +405,9 @@ public class Compiler {
                 }
 
                 symbol = this.symbolTable.define(fl.getName().getValue());
+
                 this.enterScope();
+                this.symbolTable.defineFunctionName(fl.getName().getValue());
                 for (Expression param : fl.getParameters()) {
                     this.symbolTable.define(param.getTokenValue());
                 }
@@ -409,6 +423,8 @@ public class Compiler {
                 }
                 Vector<Symbol> freeSymbols = this.symbolTable.freeSymbols;
                 int numLocals = this.symbolTable.numDefinitions;
+
+                // this.setSymbol(symbol);
                 Vector<Byte> instructions = this.leaveScope();
 
                 for (Symbol s : freeSymbols) {

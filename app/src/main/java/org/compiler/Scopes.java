@@ -7,4 +7,6 @@ public interface Scopes {
     String LocalScope = "LOCAL";
     String BuiltinScope = "BUILTIN";
     String FreeScope = "FREE";
+    String GlobalFunctionScope = "GLOBAL_FUNCTION";
+    String LocalFunctionScope = "LOCAL_FUNCTION";
 }

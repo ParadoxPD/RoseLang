@@ -305,6 +305,12 @@ public class VM {
                         return err;
                     }
                     break;
+                case OpCodes.OpCurrentClosure:
+                    err = this.push(this.currentFrame().closure);
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
                 default:
                     return new VMError("", "Unsupported Operation : " + op);
             }

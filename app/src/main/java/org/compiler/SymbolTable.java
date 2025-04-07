@@ -48,6 +48,14 @@ public class SymbolTable {
         return symbol;
     }
 
+    Symbol defineFunctionName(String name) {
+        Symbol symbol = new Symbol(name, Scopes.GlobalFunctionScope, 0);
+        symbol.scope = this.outer == null ? Scopes.GlobalFunctionScope : Scopes.LocalFunctionScope;
+
+        this.store.put(name, symbol);
+        return symbol;
+    }
+
     Symbol resolve(String name) {
         Symbol symbol = this.store.get(name);
         if (symbol == null && this.outer != null) {
