@@ -57,15 +57,24 @@ public class Compiler {
             case Scopes.BuiltinScope:
                 this.emit(OpCodes.OpGetBuiltin, s.index);
                 break;
+            case Scopes.FreeScope:
+                this.emit(OpCodes.OpGetFree, s.index);
+                break;
+            case Scopes.GlobalFunctionScope:
+            case Scopes.LocalFunctionScope:
+                this.emit(OpCodes.OpCurrentClosure);
+                break;
         }
     }
 
     void setSymbol(Symbol s) {
         switch (s.scope) {
             case Scopes.GlobalScope:
+            case Scopes.GlobalFunctionScope:
                 this.emit(OpCodes.OpSetGlobal, s.index);
                 break;
             case Scopes.LocalScope:
+            case Scopes.LocalFunctionScope:
                 this.emit(OpCodes.OpSetLocal, s.index);
                 break;
             default:
@@ -108,12 +117,18 @@ public class Compiler {
                 this.emit(OpCodes.OpPop);
                 return null;
             case BlockStatement bs:
+                // this.enterScope();
                 for (Statement s : bs.getStatements()) {
                     err = this.compile(s);
                     if (err != null) {
                         return err;
                     }
                 }
+                // int numLocals = this.symbolTable.numDefinitions;
+
+                // Vector<Byte> instructions = this.leaveScope();
+
+                // this.emit(OpCodes.OpClosure, this.constants.size() - 1, 0);
                 return null;
             case LetStatement ls:
                 err = this.compile(ls.getValue());
@@ -127,21 +142,19 @@ public class Compiler {
                 }
 
                 symbol = this.symbolTable.define(ls.getName().getValue());
-                if (symbol.scope.equals(Scopes.GlobalScope))
-                    this.emit(OpCodes.OpSetGlobal, symbol.index);
-                else this.emit(OpCodes.OpSetLocal, symbol.index);
+                this.setSymbol(symbol);
                 return null;
             case AssignmentStatement as:
                 err = this.compile(as.getExpression());
                 if (err != null) {
                     return err;
                 }
-                symbol = this.symbolTable.resolveWithinScope(as.getName().getValue());
+                symbol = this.symbolTable.resolve(as.getName().getValue());
                 if (symbol == null) {
                     return new CompilerError(
                             "", "Variable does not exist : " + as.getName().getValue());
                 }
-                this.emit(OpCodes.OpSetGlobal, symbol.index);
+                this.setSymbol(symbol);
                 return err;
             case ReturnStatement rs:
                 err = this.compile(rs.getReturnValue());
@@ -391,7 +404,10 @@ public class Compiler {
                             "", "Function already exists : " + fl.getName().getValue());
                 }
 
+                symbol = this.symbolTable.define(fl.getName().getValue());
+
                 this.enterScope();
+                this.symbolTable.defineFunctionName(fl.getName().getValue());
                 for (Expression param : fl.getParameters()) {
                     this.symbolTable.define(param.getTokenValue());
                 }
@@ -405,15 +421,21 @@ public class Compiler {
                 if (!this.lastInstructionIs(OpCodes.OpReturnValue)) {
                     this.emit(OpCodes.OpReturn);
                 }
+                Vector<Symbol> freeSymbols = this.symbolTable.freeSymbols;
                 int numLocals = this.symbolTable.numDefinitions;
+
+                // this.setSymbol(symbol);
                 Vector<Byte> instructions = this.leaveScope();
+
+                for (Symbol s : freeSymbols) {
+                    this.loadSymbol(s);
+                }
 
                 Compiled_Function_T function =
                         new Compiled_Function_T(instructions, numLocals, fl.getParameters().size());
                 int fnIndex = this.addConstant(function);
-                this.emit(OpCodes.OpClosure, fnIndex, 0);
+                this.emit(OpCodes.OpClosure, fnIndex, freeSymbols.size());
 
-                symbol = this.symbolTable.define(fl.getName().getValue());
                 this.setSymbol(symbol);
 
                 return null;

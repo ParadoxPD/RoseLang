@@ -48,6 +48,8 @@ public interface OpCodes {
     byte OpGetBuiltin = 29;
 
     byte OpClosure = 30;
+    byte OpGetFree = 31;
+    byte OpCurrentClosure = 32;
 
     Map<Byte, Definition> Definitions =
             Map.ofEntries(
@@ -112,5 +114,10 @@ public interface OpCodes {
                     new AbstractMap.SimpleEntry<Byte, Definition>(
                             OpCodes.OpGetBuiltin, new Definition("OpGetBuiltin", new int[] {1})),
                     new AbstractMap.SimpleEntry<Byte, Definition>(
-                            OpCodes.OpClosure, new Definition("OpClosure", new int[] {2, 1})));
+                            OpCodes.OpClosure, new Definition("OpClosure", new int[] {2, 1})),
+                    new AbstractMap.SimpleEntry<Byte, Definition>(
+                            OpCodes.OpGetFree, new Definition("OpGetFree", new int[] {1})),
+                    new AbstractMap.SimpleEntry<Byte, Definition>(
+                            OpCodes.OpCurrentClosure,
+                            new Definition("OpCurrentClosure", new int[] {})));
 }

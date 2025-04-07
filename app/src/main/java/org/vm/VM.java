@@ -58,10 +58,16 @@ public class VM {
         // this.frameIndex++;
     }
 
-    public VMError pushClosure(int index) {
+    public VMError pushClosure(int index, int numFree) {
         Object_T constant = this.constants.get(index);
         if (constant instanceof Compiled_Function_T) {
-            return this.push(new Closure_T((Compiled_Function_T) constant));
+            Vector<Object_T> free = Helper.<Object_T>createVector(numFree, null);
+            for (int i = 0; i < numFree; i++) {
+                free.set(i, this.stack.get(this.sp - numFree + i));
+            }
+            this.sp = this.sp - numFree;
+
+            return this.push(new Closure_T((Compiled_Function_T) constant, free));
         }
         return new VMError("", "Not a Function : " + constant);
         // this.frameIndex++;
@@ -282,10 +288,25 @@ public class VM {
                     break;
                 case OpCodes.OpClosure:
                     constIndex = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
-                    int som = Code.readUint8(Helper.vectorToByteArray(ins), insPointer + 3);
+                    int numFree = Code.readUint8(Helper.vectorToByteArray(ins), insPointer + 3);
                     this.currentFrame().insPointer += 3;
 
-                    err = this.pushClosure(constIndex);
+                    err = this.pushClosure(constIndex, numFree);
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
+                case OpCodes.OpGetFree:
+                    int freeIndex = Code.readUint8(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 1;
+                    Closure_T currentClosure = this.currentFrame().closure;
+                    err = this.push(currentClosure.getFree().get(freeIndex));
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
+                case OpCodes.OpCurrentClosure:
+                    err = this.push(this.currentFrame().closure);
                     if (err != null) {
                         return err;
                     }

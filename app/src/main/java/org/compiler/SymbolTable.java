@@ -2,6 +2,7 @@ package org.compiler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Vector;
 
 /** SymbolTable */
 public class SymbolTable {
@@ -11,8 +12,11 @@ public class SymbolTable {
 
     SymbolTable outer;
 
+    Vector<Symbol> freeSymbols;
+
     public SymbolTable() {
         this.store = new HashMap<String, Symbol>();
+        this.freeSymbols = new Vector<Symbol>();
         this.outer = null;
     }
 
@@ -31,10 +35,38 @@ public class SymbolTable {
         return symbol;
     }
 
+    Symbol defineBuiltin(int index, String name) {
+        Symbol symbol = new Symbol(name, Scopes.BuiltinScope, index);
+        this.store.put(name, symbol);
+        return symbol;
+    }
+
+    Symbol defineFree(Symbol original) {
+        this.freeSymbols.add(original);
+        Symbol symbol = new Symbol(original.name, Scopes.FreeScope, this.freeSymbols.size() - 1);
+        this.store.put(original.name, symbol);
+        return symbol;
+    }
+
+    Symbol defineFunctionName(String name) {
+        Symbol symbol = new Symbol(name, Scopes.GlobalFunctionScope, 0);
+        symbol.scope = this.outer == null ? Scopes.GlobalFunctionScope : Scopes.LocalFunctionScope;
+
+        this.store.put(name, symbol);
+        return symbol;
+    }
+
     Symbol resolve(String name) {
         Symbol symbol = this.store.get(name);
         if (symbol == null && this.outer != null) {
             symbol = this.outer.resolve(name);
+            if (symbol != null) {
+                if (symbol.scope == Scopes.BuiltinScope || symbol.scope == Scopes.GlobalScope) {
+                    return symbol;
+                }
+                Symbol free = this.defineFree(symbol);
+                return free;
+            }
             return symbol;
         }
         return symbol;
@@ -42,12 +74,6 @@ public class SymbolTable {
 
     Symbol resolveWithinScope(String name) {
         return this.store.get(name);
-    }
-
-    Symbol defineBuiltin(int index, String name) {
-        Symbol symbol = new Symbol(name, Scopes.BuiltinScope, index);
-        this.store.put(name, symbol);
-        return symbol;
     }
 
     public void print() {
