@@ -1,4 +1,4 @@
-# JorkLang
+# RoseLang
 
 A scripting language built using YAVA.
 
@@ -150,4 +150,3 @@ printData();
 - sum(array)
 - filter(data,function)
 - map(data,function)
-
