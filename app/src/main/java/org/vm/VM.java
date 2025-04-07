@@ -25,6 +25,8 @@ public class VM {
     Vector<Frame> frames;
     int frameIndex;
 
+    BuiltIns builtins;
+
     public VM(ByteCode bytecode) {
 
         this.frames = Helper.<Frame>createVector(MaxFrames, null);
@@ -36,6 +38,7 @@ public class VM {
         // System.exit(0);
         this.sp = 0;
         this.frameIndex = 1;
+        this.builtins = new BuiltIns();
     }
 
     public VM(ByteCode bytecode, Vector<Object_T> globals) {
@@ -228,7 +231,7 @@ public class VM {
                     int numArgs = Code.readUint8(Helper.vectorToByteArray(ins), insPointer + 1);
                     this.currentFrame().insPointer += 1;
 
-                    err = this.callFunction(numArgs);
+                    err = this.executeCall(numArgs);
                     if (err != null) {
                         return err;
                     }
@@ -252,6 +255,19 @@ public class VM {
                         return err;
                     }
                     break;
+                case OpCodes.OpGetBuiltin:
+                    int builtinIndex =
+                            Code.readUint8(Helper.vectorToByteArray(ins), insPointer + 1);
+                    this.currentFrame().insPointer += 1;
+
+                    Builtin_Function_T definition =
+                            this.builtins.getBuiltIn(this.builtins.getKey(builtinIndex));
+
+                    err = this.push(definition);
+                    if (err != null) {
+                        return err;
+                    }
+                    break;
                 default:
                     return new VMError("", "Unsupported Operation : " + op);
             }
@@ -259,27 +275,47 @@ public class VM {
         return err;
     }
 
-    VMError callFunction(int numArgs) {
-        Object_T obj = this.stack.get(this.sp - 1 - numArgs);
-        if (obj instanceof Compiled_Function_T) {
-            Compiled_Function_T fn = (Compiled_Function_T) obj;
-            if (numArgs != fn.getNumParameters()) {
-                return new VMError(
-                        "",
-                        "wrong number of arguments: want: "
-                                + fn.getNumParameters()
-                                + "got= "
-                                + numArgs);
-            }
-            Frame frame = new Frame(fn, this.sp - numArgs);
-            // System.out.println("Hello1");
-            this.pushFrame(frame);
-            // System.out.println("Hello2");
-            this.sp = frame.basePointer + fn.getNumLocals();
-        } else {
-            return new VMError("", "Calling non function");
+    VMError executeCall(int numArgs) {
+        Object_T callee = this.stack.get(this.sp - 1 - numArgs);
+        switch (callee) {
+            case Compiled_Function_T ct:
+                return this.callFunction(ct, numArgs);
+            case Builtin_Function_T bft:
+                return this.callBuiltin(bft, numArgs);
+            default:
+                return new VMError("", "Calling non-function and non builtin");
         }
+    }
+
+    VMError callFunction(Compiled_Function_T fn, int numArgs) {
+
+        if (numArgs != fn.getNumParameters()) {
+            return new VMError(
+                    "",
+                    "wrong number of arguments: want: "
+                            + fn.getNumParameters()
+                            + "got= "
+                            + numArgs);
+        }
+        Frame frame = new Frame(fn, this.sp - numArgs);
+        // System.out.println("Hello1");
+        this.pushFrame(frame);
+        // System.out.println("Hello2");
+        this.sp = frame.basePointer + fn.getNumLocals();
         return null;
+    }
+
+    VMError callBuiltin(Builtin_Function_T fn, int numArgs) {
+        Vector<Object_T> args = Helper.slice(this.stack, this.sp - numArgs, this.sp);
+
+        Object_T result = fn.applyFunction(args);
+        this.sp = this.sp - numArgs - 1;
+
+        if (result != null) {
+            return this.push(result);
+        } else {
+            return this.push(Constants.NULL);
+        }
     }
 
     VMError executeIndexExpression(Object_T left, Object_T index) {

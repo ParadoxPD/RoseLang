@@ -43,4 +43,17 @@ public class SymbolTable {
     Symbol resolveWithinScope(String name) {
         return this.store.get(name);
     }
+
+    Symbol defineBuiltin(int index, String name) {
+        Symbol symbol = new Symbol(name, Scopes.BuiltinScope, index);
+        this.store.put(name, symbol);
+        return symbol;
+    }
+
+    public void print() {
+        System.out.println("Printing SYmbol table");
+        for (String name : this.store.keySet()) {
+            System.out.println(name + " : " + this.store.get(name));
+        }
+    }
 }

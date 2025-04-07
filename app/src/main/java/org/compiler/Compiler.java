@@ -9,6 +9,7 @@ import org.parser.expressions.*;
 import org.parser.literals.*;
 import org.parser.statements.*;
 import org.typesystem.*;
+import org.typesystem.utils.BuiltIns;
 
 import java.util.*;
 
@@ -24,6 +25,11 @@ public class Compiler {
     public Compiler() {
         this.constants = new Vector<Object_T>();
         this.symbolTable = new SymbolTable();
+        BuiltIns builtins = new BuiltIns();
+        for (int i = 0; i < builtins.getSize(); i++) {
+            System.out.println("Bu it in : " + builtins.getKey(i));
+            System.out.println(this.symbolTable.defineBuiltin(i, builtins.getKey(i)));
+        }
         this.scopeIndex = 0;
         this.scopes = new Vector<CompilationScope>();
         this.scopes.add(new CompilationScope());
@@ -33,6 +39,25 @@ public class Compiler {
         this();
         this.symbolTable = st;
         this.constants = constants;
+        BuiltIns builtins = new BuiltIns();
+        for (int i = 0; i < builtins.getSize(); i++) {
+            System.out.println("Bu it in : " + builtins.getKey(i));
+            System.out.println(this.symbolTable.defineBuiltin(i, builtins.getKey(i)));
+        }
+    }
+
+    void loadSymbol(Symbol s) {
+        switch (s.scope) {
+            case Scopes.GlobalScope:
+                this.emit(OpCodes.OpGetGlobal, s.index);
+                break;
+            case Scopes.LocalScope:
+                this.emit(OpCodes.OpGetLocal, s.index);
+                break;
+            case Scopes.BuiltinScope:
+                this.emit(OpCodes.OpGetBuiltin, s.index);
+                break;
+        }
     }
 
     int addConstant(Object_T obj) {
@@ -298,12 +323,11 @@ public class Compiler {
 
             case Identifier id:
                 symbol = this.symbolTable.resolve(id.getValue());
+                this.symbolTable.print();
                 if (symbol == null) {
                     return new CompilerError("", "Variable does not exist : " + id.getValue());
                 }
-                if (symbol.scope.equals(Scopes.GlobalScope))
-                    this.emit(OpCodes.OpGetGlobal, symbol.index);
-                else this.emit(OpCodes.OpGetLocal, symbol.index);
+                this.loadSymbol(symbol);
 
                 return null;
             case IntegerLiteral il:
