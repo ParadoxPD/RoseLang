@@ -165,13 +165,33 @@ public class Compiler {
                 }
                 this.emit(OpCodes.OpReturnValue);
                 return null;
+            case WhileStatement ws:
+                int beforeCondn = this.currentInstructions().size();
+                err = this.compile(ws.getCondition());
+
+                if (err != null) {
+                    return err;
+                }
+                int jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
+                err = this.compile(ws.getBody());
+                if (err != null) {
+                    return err;
+                }
+                if (this.lastInstructionIs(OpCodes.OpPop)) {
+                    this.removeLastPop();
+                }
+                this.emit(OpCodes.OpJump, beforeCondn);
+                int afterBodyPos = this.currentInstructions().size();
+                this.changeOperand(jumpNotTruthyPos, afterBodyPos);
+
+                return null;
             case IfExpression ie:
                 err = this.compile(ie.getCondition());
 
                 if (err != null) {
                     return err;
                 }
-                int jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
+                jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
                 err = this.compile(ie.getConsequence());
                 if (err != null) {
                     return err;

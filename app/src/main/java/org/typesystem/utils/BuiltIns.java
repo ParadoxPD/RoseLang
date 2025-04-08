@@ -173,8 +173,9 @@ public class BuiltIns {
                     @Override
                     public Object_T applyFunction(Vector<Object_T> args) {
                         for (Object_T arg : args) {
-                            System.out.println(arg.inspect());
+                            System.out.print(arg.inspect() + " ");
                         }
+                        System.out.println();
                         return Constants.NULL;
                     }
                 });

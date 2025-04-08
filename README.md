@@ -117,14 +117,24 @@ outerCall();
 
 #### Loop
 
-#### Loops are not implemented now and wont work
+#### Loops are working now yayyyyy (Only while loop)
 
 ```
-let a = 1;
-while(a < 10){
-    print(a);
-    a = a+1;
+
+function printData(){
+    let x = 1;
+
+    while(x < 10){
+        let y = 1;
+        while(y < 10){
+            print(x,y,x*y);
+            y = y + 1;
+        }
+        x = x + 1;
+    }
 }
+
+printData();
 
 ```
 
