@@ -312,7 +312,7 @@ public class Parser {
                     @Override
                     Expression parse(Expression function) {
 
-                        System.out.println("FUNCTION : " + function);
+                        debugger.log("FUNCTION : " + function);
                         CallExpression exp;
                         if (function == null) {
                             exp =

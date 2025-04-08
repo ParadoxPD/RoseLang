@@ -76,10 +76,11 @@ public class SymbolTable {
         return this.store.get(name);
     }
 
-    public void print() {
-        System.out.println("Printing SYmbol table");
+    public String print() {
+        String res = "Printing SYmbol table\n";
         for (String name : this.store.keySet()) {
-            System.out.println(name + " : " + this.store.get(name));
+            res += name + " : " + this.store.get(name) + "\n";
         }
+        return res;
     }
 }

@@ -1,0 +1,14 @@
+function outerCall(){ 
+
+    function recur(x) { 
+        if (x==0) { 
+            return 0; 
+        } 
+        recur(x-1); 
+        print(x); 
+    } 
+    recur(10); 
+
+} 
+
+outerCall();
