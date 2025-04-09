@@ -180,35 +180,6 @@ public class Parser {
                         return stm;
                     }
                 };
-        // PrefixParser functionParser =
-        //        new PrefixParser() {
-        //            @Override
-        //            Expression parse() {
-        //                FunctionLiteral fnt = new FunctionLiteral(curr);
-
-        //                if (!expectPeek(TokenList.IDENTIFIER)) {
-        //                    errors.addElement(
-        //                            new ParserError("Identifier missing", "Function needs a
-        // name"));
-        //                    return null;
-        //                }
-        //                fnt.setName(new Identifier(curr, curr.getTokenValue()));
-
-        //                if (!expectPeek(TokenList.PAREN_OPEN)) {
-        //                    errors.addElement(new ParserError("Missing Symbol", "( missing"));
-        //                    return null;
-        //                }
-        //                fnt.addParameters(parseFunctionParameters());
-
-        //                if (!expectPeek(TokenList.BRACE_OPEN)) {
-        //                    errors.addElement(new ParserError("Missing Symbol", "{ missing"));
-        //                    return null;
-        //                }
-        //                fnt.addBody(parseBlockStatement());
-        //                debugger.log(fnt.print("Function : "));
-        //                return fnt;
-        //            }
-        //        };
 
         PrefixParser stringParser =
                 new PrefixParser() {
@@ -262,6 +233,14 @@ public class Parser {
                     }
                 };
 
+        PrefixParser newLineParser =
+                new PrefixParser() {
+                    @Override
+                    Expression parse() {
+                        return null;
+                    }
+                };
+
         this.registerPrefixParser((TokenList.IDENTIFIER), idenParser);
         this.registerPrefixParser((TokenList.INT), integerParser);
         this.registerPrefixParser((TokenList.FLOAT), floatParser);
@@ -273,8 +252,8 @@ public class Parser {
         this.registerPrefixParser((TokenList.BRACE_OPEN), hashLiteralParser);
         this.registerPrefixParser((TokenList.SQUARE_BRACKET_OPEN), arrayParser);
         this.registerPrefixParser((TokenList.IF), ifExpressionParser);
-        // this.registerPrefixParser((TokenList.FUNCTION), functionParser);
         this.registerPrefixParser((TokenList.STRING), stringParser);
+        this.registerPrefixParser((TokenList.NEWLINE), newLineParser);
 
         InfixParser infixParser =
                 new InfixParser() {
@@ -431,6 +410,8 @@ public class Parser {
     Statement parseStatement() {
         // NOTE: Properly implement the '=' parsing (It has some off by one bug)
         switch (this.curr.getType()) {
+            case TokenList.HASH:
+                return this.parseComment();
             case TokenList.LET:
                 return this.parseLetStatement();
             case TokenList.RETURN:
@@ -445,6 +426,18 @@ public class Parser {
             default:
                 return this.parseExpressionStatement();
         }
+    }
+
+    Statement parseComment() {
+        String comment = "";
+        Token tok = this.curr;
+        this.nextToken();
+        while (!this.peekTokenIs(TokenList.NEWLINE)) {
+            System.out.println("Hello");
+            comment += this.curr.getTokenValue();
+            this.nextToken();
+        }
+        return new CommentStatement(tok, comment + "\n");
     }
 
     Statement parseFunction() {

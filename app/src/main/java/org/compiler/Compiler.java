@@ -110,6 +110,9 @@ public class Compiler {
                 return null;
 
             case ExpressionStatement es:
+                if (es.getExpression() == null) {
+                    return null;
+                }
                 this.debugger.log(
                         "Are we here ? EXPRESSION STATEMETN" + es.getExpression().print(""));
                 err = this.compile(es.getExpression());
@@ -185,6 +188,8 @@ public class Compiler {
                 int afterBodyPos = this.currentInstructions().size();
                 this.changeOperand(jumpNotTruthyPos, afterBodyPos);
 
+                return null;
+            case CommentStatement cs:
                 return null;
             case IfExpression ie:
                 err = this.compile(ie.getCondition());
