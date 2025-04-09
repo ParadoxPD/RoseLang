@@ -119,6 +119,7 @@ public class Compiler {
                 this.emit(OpCodes.OpPop);
                 return null;
             case BlockStatement bs:
+
                 // this.enterScope();
                 for (Statement s : bs.getStatements()) {
                     err = this.compile(s);
@@ -130,7 +131,7 @@ public class Compiler {
 
                 // Vector<Byte> instructions = this.leaveScope();
 
-                // this.emit(OpCodes.OpClosure, this.constants.size() - 1, 0);
+                // this.emit(OpCodes.OpClosure,0 , 0);
                 return null;
             case LetStatement ls:
                 err = this.compile(ls.getValue());
