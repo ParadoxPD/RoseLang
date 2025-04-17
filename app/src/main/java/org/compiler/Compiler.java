@@ -21,28 +21,30 @@ public class Compiler {
 
     Vector<CompilationScope> scopes;
     int scopeIndex;
+    Debugger debugger;
 
-    public Compiler() {
+    public Compiler(Debugger debugger) {
+        this.debugger = debugger;
         this.constants = new Vector<Object_T>();
         this.symbolTable = new SymbolTable();
         BuiltIns builtins = new BuiltIns();
         for (int i = 0; i < builtins.getSize(); i++) {
-            System.out.println("Bu it in : " + builtins.getKey(i));
-            System.out.println(this.symbolTable.defineBuiltin(i, builtins.getKey(i)));
+            this.debugger.log("Bu it in : " + builtins.getKey(i));
+            this.debugger.log(this.symbolTable.defineBuiltin(i, builtins.getKey(i)).toString());
         }
         this.scopeIndex = 0;
         this.scopes = new Vector<CompilationScope>();
         this.scopes.add(new CompilationScope());
     }
 
-    public Compiler(SymbolTable st, Vector<Object_T> constants) {
-        this();
+    public Compiler(SymbolTable st, Vector<Object_T> constants, Debugger debugger) {
+        this(debugger);
         this.symbolTable = st;
         this.constants = constants;
         BuiltIns builtins = new BuiltIns();
         for (int i = 0; i < builtins.getSize(); i++) {
-            System.out.println("Bu it in : " + builtins.getKey(i));
-            System.out.println(this.symbolTable.defineBuiltin(i, builtins.getKey(i)));
+            this.debugger.log("Bu it in : " + builtins.getKey(i));
+            this.debugger.log(this.symbolTable.defineBuiltin(i, builtins.getKey(i)).toString());
         }
     }
 
@@ -78,7 +80,7 @@ public class Compiler {
                 this.emit(OpCodes.OpSetLocal, s.index);
                 break;
             default:
-                System.out.println("How did you get here ? Are you kidding me ? What did you do?");
+                this.debugger.log("How did you get here ? Are you kidding me ? What did you do?");
         }
     }
 
@@ -88,7 +90,7 @@ public class Compiler {
     }
 
     public void printIns() {
-        System.out.println(Code.toString(this.currentInstructions()));
+        this.debugger.log(Code.toString(this.currentInstructions()));
     }
 
     public CompilerError compile(Node node) {
@@ -108,7 +110,10 @@ public class Compiler {
                 return null;
 
             case ExpressionStatement es:
-                System.out.println(
+                if (es.getExpression() == null) {
+                    return null;
+                }
+                this.debugger.log(
                         "Are we here ? EXPRESSION STATEMETN" + es.getExpression().print(""));
                 err = this.compile(es.getExpression());
                 if (err != null) {
@@ -117,6 +122,7 @@ public class Compiler {
                 this.emit(OpCodes.OpPop);
                 return null;
             case BlockStatement bs:
+
                 // this.enterScope();
                 for (Statement s : bs.getStatements()) {
                     err = this.compile(s);
@@ -128,7 +134,7 @@ public class Compiler {
 
                 // Vector<Byte> instructions = this.leaveScope();
 
-                // this.emit(OpCodes.OpClosure, this.constants.size() - 1, 0);
+                // this.emit(OpCodes.OpClosure,0 , 0);
                 return null;
             case LetStatement ls:
                 err = this.compile(ls.getValue());
@@ -163,13 +169,35 @@ public class Compiler {
                 }
                 this.emit(OpCodes.OpReturnValue);
                 return null;
+            case WhileStatement ws:
+                int beforeCondn = this.currentInstructions().size();
+                err = this.compile(ws.getCondition());
+
+                if (err != null) {
+                    return err;
+                }
+                int jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
+                err = this.compile(ws.getBody());
+                if (err != null) {
+                    return err;
+                }
+                if (this.lastInstructionIs(OpCodes.OpPop)) {
+                    this.removeLastPop();
+                }
+                this.emit(OpCodes.OpJump, beforeCondn);
+                int afterBodyPos = this.currentInstructions().size();
+                this.changeOperand(jumpNotTruthyPos, afterBodyPos);
+
+                return null;
+            case CommentStatement cs:
+                return null;
             case IfExpression ie:
                 err = this.compile(ie.getCondition());
 
                 if (err != null) {
                     return err;
                 }
-                int jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
+                jumpNotTruthyPos = this.emit(OpCodes.OpJumpNotTruthy, 9999);
                 err = this.compile(ie.getConsequence());
                 if (err != null) {
                     return err;
@@ -309,8 +337,8 @@ public class Compiler {
                 this.emit(OpCodes.OpIndex);
                 return null;
             case CallExpression ce:
-                System.out.println("calling");
-                System.out.println(ce.getFunction().print("FUCNTON : "));
+                this.debugger.log("calling");
+                this.debugger.log(ce.getFunction().print("FUCNTON : "));
                 err = this.compile(ce.getFunction());
                 if (err != null) {
                     return err;
@@ -321,7 +349,7 @@ public class Compiler {
                         return err;
                     }
                 }
-                System.out.println("Arguments : " + ce.getArguments().size());
+                this.debugger.log("Arguments : " + ce.getArguments().size());
                 this.emit(OpCodes.OpCall, ce.getArguments().size());
                 return null;
             case DotExpression de:
@@ -349,7 +377,7 @@ public class Compiler {
 
             case Identifier id:
                 symbol = this.symbolTable.resolve(id.getValue());
-                this.symbolTable.print();
+                this.debugger.log(this.symbolTable.print());
                 if (symbol == null) {
                     return new CompilerError("", "Variable does not exist : " + id.getValue());
                 }
@@ -396,7 +424,7 @@ public class Compiler {
 
                 return null;
             case FunctionLiteral fl:
-                System.out.println("AAAAAAAfg");
+                this.debugger.log("AAAAAAAfg");
 
                 symbol = this.symbolTable.resolve(fl.getName().getValue());
                 if (symbol != null) {

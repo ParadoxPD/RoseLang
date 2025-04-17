@@ -61,7 +61,7 @@ public class REPL {
                     Vector<ParserError> errors = ps.getErrors();
                     if (errors.size() == 0 && program != null) {
 
-                        Compiler cmp = new Compiler(symbolTable, constants);
+                        Compiler cmp = new Compiler(symbolTable, constants, debugger);
                         CompilerError err = cmp.compile(program);
                         System.out.println("Compiled Instructions : ");
                         cmp.printIns();
@@ -70,7 +70,7 @@ public class REPL {
                             continue;
                         }
 
-                        VM machine = new VM(cmp.bytecode(), globals);
+                        VM machine = new VM(cmp.bytecode(), globals, debugger);
                         VMError v_err = machine.run();
                         if (v_err != null) {
                             v_err.printError();

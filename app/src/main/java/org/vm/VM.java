@@ -3,6 +3,7 @@ package org.vm;
 import org.code.*;
 import org.code.utils.*;
 import org.compiler.*;
+import org.debugger.Debugger;
 import org.error.*;
 import org.typesystem.*;
 import org.typesystem.utils.*;
@@ -27,7 +28,9 @@ public class VM {
 
     BuiltIns builtins;
 
-    public VM(ByteCode bytecode) {
+    Debugger debugger;
+
+    public VM(ByteCode bytecode, Debugger debugger) {
 
         this.frames = Helper.<Frame>createVector(MaxFrames, null);
         Compiled_Function_T mainFunc = new Compiled_Function_T(bytecode.getInstructions());
@@ -42,10 +45,11 @@ public class VM {
         this.sp = 0;
         this.frameIndex = 1;
         this.builtins = new BuiltIns();
+        this.debugger = debugger;
     }
 
-    public VM(ByteCode bytecode, Vector<Object_T> globals) {
-        this(bytecode);
+    public VM(ByteCode bytecode, Vector<Object_T> globals, Debugger debugger) {
+        this(bytecode, debugger);
         this.globals = globals;
     }
 
@@ -100,7 +104,7 @@ public class VM {
             op = ins.get(insPointer);
             // System.out.println(op);
 
-            System.out.println("Operator : " + OpCodes.Definitions.get(op).name);
+            this.debugger.log("Operator : " + OpCodes.Definitions.get(op).name);
             switch (op) {
                 case OpCodes.OpConstant:
                     int constIndex = Code.readUint16(Helper.vectorToByteArray(ins), insPointer + 1);
@@ -385,7 +389,7 @@ public class VM {
         }
         HashPair pair = hash.getPairs().get(((Hashable) index).hash());
         if (pair == null) {
-            System.out.println("aaaaaaaaaaaaahhhhhhhh");
+            this.debugger.log("aaaaaaaaaaaaahhhhhhhh");
             this.push(Constants.NULL);
             return new VMError("", "Undefined Key : " + index.inspect());
         }
@@ -631,8 +635,8 @@ public class VM {
     VMError executeIntegerComparision(byte op, Integer_T left, Integer_T right) {
         int leftVal = left.getValue();
         int rightVal = right.getValue();
-        System.out.println("Left Value : " + leftVal);
-        System.out.println("Right Value : " + rightVal);
+        this.debugger.log("Left Value : " + leftVal);
+        this.debugger.log("Right Value : " + rightVal);
         switch (op) {
             case OpCodes.OpEqual:
                 return this.push(this.nativeBoolToBooleanObject(leftVal == rightVal));
@@ -650,8 +654,8 @@ public class VM {
     VMError executeFloatComparision(byte op, Float_T left, Float_T right) {
         float leftVal = left.getValue();
         float rightVal = right.getValue();
-        System.out.println("Left Value : " + leftVal);
-        System.out.println("Right Value : " + rightVal);
+        this.debugger.log("Left Value : " + leftVal);
+        this.debugger.log("Right Value : " + rightVal);
         switch (op) {
             case OpCodes.OpEqual:
                 return this.push(this.nativeBoolToBooleanObject(leftVal == rightVal));

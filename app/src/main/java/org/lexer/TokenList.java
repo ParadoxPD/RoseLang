@@ -75,4 +75,10 @@ public interface TokenList {
                     new AbstractMap.SimpleEntry<String, String>("else", "ELSE"),
                     new AbstractMap.SimpleEntry<String, String>("while", "WHILE"),
                     new AbstractMap.SimpleEntry<String, String>("return", "RETURN"));
+
+    String NEWLINE = "n";
+    String HASH = "#";
+    String SPACE = " ";
+    String CARRIEAGERETURN = "r";
+    String TAB = "t";
 }
